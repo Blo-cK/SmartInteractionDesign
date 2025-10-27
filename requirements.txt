@@ -1,0 +1,17 @@
+# YOLO / Ultralytics
+ultralytics>=8.0.0
+
+# Computer Vision
+opencv-python>=4.8.0
+
+# Deep Learning Frameworks (werden von ultralytics benötigt)
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Datenverarbeitung
+numpy>=1.24.0
+
+# Bildverarbeitung
+Pillow>=10.0.0
+
+

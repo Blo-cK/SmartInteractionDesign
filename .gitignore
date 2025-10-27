@@ -1,0 +1,103 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# PyCharm
+.idea/
+
+# YOLO / Ultralytics
+# Trainingsergebnisse und Runs
+runs/
+weights/
+wandb/
+
+# YOLO Modelle (große Dateien)
+*.pt
+*.pth
+*.weights
+*.onnx
+*.tflite
+*.pb
+
+# Spezifische große Modell-Dateien
+yoloe-11l-seg-pf.pt
+yoloe-11l-seg.pt
+yoloe-11s-seg-pf.pt
+yoloe-11s-seg.pt
+mobileclip_blt.ts
+
+# Detektionsergebnisse / Outputs
+detections_*.csv
+detections_*.json
+detections_*.txt
+output/
+results/
+
+
+# Logs
+*.log
+logs/
+
+# Datenbanken
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporäre Dateien
+*.tmp
+*.temp
+*.cache
+
+# TypeScript (für mobileclip_blt.ts)
+node_modules/
+*.js.map
+dist/
+.tsbuildinfo
+
+# Umgebungsvariablen
+.env
+.env.local
+.env.*.local
+
+# OS spezifisch
+Thumbs.db
+Desktop.ini
+
