@@ -12,10 +12,12 @@ model = YOLOE("yoloe-11l-seg.pt")
 ref_paths = [
     "assets/zebra.jpg",
     "assets/monasolid.jpg",
+    "assets/spielzeitflyer.png",
 ]
 ref_prompts = [
     dict(bboxes=np.array([[25, 44, 322, 316]]), cls=np.array([0])),
     dict(bboxes=np.array([[6, 7, 177, 221]]), cls=np.array([1])),
+    dict(bboxes=np.array([[1301, 0, 2000, 1412]]), cls=np.array([1])),
 ]
 
 # Lade Referenzbilder (RGB)
