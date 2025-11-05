@@ -1,0 +1,2595 @@
+{
+  "metadata": {
+    "recording_date": "2025-11-05T10:45:30.092216",
+    "duration_ms": 4669,
+    "duration_seconds": 4.67,
+    "total_samples": 240,
+    "sample_rate_hz": 100,
+    "unique_faces": 1,
+    "face_ids": [
+      "face_0"
+    ],
+    "coordinate_system": {
+      "x_range": [
+        -1,
+        1
+      ],
+      "y_range": [
+        -1,
+        1
+      ],
+      "description": "Normalized coordinates: x=yaw/180, y=pitch/180"
+    },
+    "data_format": "Multi-person with faces array per timestamp"
+  },
+  "gaze_data": [
+    {
+      "timestamp": 0,
+      "faces": []
+    },
+    {
+      "timestamp": 30,
+      "faces": []
+    },
+    {
+      "timestamp": 46,
+      "faces": []
+    },
+    {
+      "timestamp": 63,
+      "faces": []
+    },
+    {
+      "timestamp": 80,
+      "faces": []
+    },
+    {
+      "timestamp": 97,
+      "faces": []
+    },
+    {
+      "timestamp": 114,
+      "faces": []
+    },
+    {
+      "timestamp": 132,
+      "faces": []
+    },
+    {
+      "timestamp": 148,
+      "faces": []
+    },
+    {
+      "timestamp": 164,
+      "faces": []
+    },
+    {
+      "timestamp": 181,
+      "faces": []
+    },
+    {
+      "timestamp": 198,
+      "faces": []
+    },
+    {
+      "timestamp": 215,
+      "faces": []
+    },
+    {
+      "timestamp": 231,
+      "faces": []
+    },
+    {
+      "timestamp": 256,
+      "faces": []
+    },
+    {
+      "timestamp": 272,
+      "faces": []
+    },
+    {
+      "timestamp": 297,
+      "faces": []
+    },
+    {
+      "timestamp": 313,
+      "faces": []
+    },
+    {
+      "timestamp": 331,
+      "faces": []
+    },
+    {
+      "timestamp": 347,
+      "faces": []
+    },
+    {
+      "timestamp": 363,
+      "faces": []
+    },
+    {
+      "timestamp": 382,
+      "faces": []
+    },
+    {
+      "timestamp": 398,
+      "faces": []
+    },
+    {
+      "timestamp": 414,
+      "faces": []
+    },
+    {
+      "timestamp": 435,
+      "faces": []
+    },
+    {
+      "timestamp": 460,
+      "faces": []
+    },
+    {
+      "timestamp": 482,
+      "faces": []
+    },
+    {
+      "timestamp": 498,
+      "faces": []
+    },
+    {
+      "timestamp": 514,
+      "faces": []
+    },
+    {
+      "timestamp": 530,
+      "faces": []
+    },
+    {
+      "timestamp": 545,
+      "faces": []
+    },
+    {
+      "timestamp": 563,
+      "faces": []
+    },
+    {
+      "timestamp": 583,
+      "faces": []
+    },
+    {
+      "timestamp": 614,
+      "faces": []
+    },
+    {
+      "timestamp": 630,
+      "faces": []
+    },
+    {
+      "timestamp": 646,
+      "faces": []
+    },
+    {
+      "timestamp": 662,
+      "faces": []
+    },
+    {
+      "timestamp": 683,
+      "faces": []
+    },
+    {
+      "timestamp": 698,
+      "faces": []
+    },
+    {
+      "timestamp": 714,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 730,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 746,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 762,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 777,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 811,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 832,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 847,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 863,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 879,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 900,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0128,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.31
+        }
+      ]
+    },
+    {
+      "timestamp": 915,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 932,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 947,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 966,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 994,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 1016,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 1032,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 1048,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0189,
+          "y": 0.0031,
+          "pitch_deg": 0.55,
+          "yaw_deg": -3.4
+        }
+      ]
+    },
+    {
+      "timestamp": 1062,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1076,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1111,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1132,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1149,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1165,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1181,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1198,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0143,
+          "y": 0.0042,
+          "pitch_deg": 0.76,
+          "yaw_deg": -2.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1214,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1234,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1265,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1280,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1296,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1311,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1326,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1349,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0135,
+          "y": 0.0085,
+          "pitch_deg": 1.52,
+          "yaw_deg": -2.43
+        }
+      ]
+    },
+    {
+      "timestamp": 1365,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1380,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1400,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1420,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1433,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1448,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1464,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1482,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1498,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0087,
+          "y": 0.0039,
+          "pitch_deg": 0.71,
+          "yaw_deg": -1.57
+        }
+      ]
+    },
+    {
+      "timestamp": 1516,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1531,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1565,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1581,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1597,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1613,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1628,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1650,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1666,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0124,
+          "y": 0.0082,
+          "pitch_deg": 1.47,
+          "yaw_deg": -2.23
+        }
+      ]
+    },
+    {
+      "timestamp": 1682,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1697,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1728,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1749,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1765,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1781,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1796,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1810,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1824,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1840,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.009,
+          "y": 0.0085,
+          "pitch_deg": 1.54,
+          "yaw_deg": -1.62
+        }
+      ]
+    },
+    {
+      "timestamp": 1863,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 1878,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 1893,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 1925,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 1947,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 1966,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 1981,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 1995,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2010,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2027,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2040,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2054,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2071,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2086,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2101,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.008,
+          "y": 0.0023,
+          "pitch_deg": 0.41,
+          "yaw_deg": -1.44
+        }
+      ]
+    },
+    {
+      "timestamp": 2115,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2131,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2147,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2169,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2200,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2216,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2232,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2248,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2263,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2274,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2287,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2300,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2314,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2330,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2345,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2363,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2379,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0085,
+          "y": -0.0002,
+          "pitch_deg": -0.03,
+          "yaw_deg": -1.52
+        }
+      ]
+    },
+    {
+      "timestamp": 2395,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2411,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2432,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2448,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2460,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2484,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2516,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2531,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2547,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2562,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2578,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2589,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2605,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2620,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2633,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2648,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2666,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": 0.0022,
+          "pitch_deg": 0.4,
+          "yaw_deg": -1.81
+        }
+      ]
+    },
+    {
+      "timestamp": 2682,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2698,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2726,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2748,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2766,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2781,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2799,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2816,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0119,
+          "y": 0.0009,
+          "pitch_deg": 0.16,
+          "yaw_deg": -2.14
+        }
+      ]
+    },
+    {
+      "timestamp": 2832,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2848,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2865,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2890,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2903,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2919,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2935,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2951,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2966,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2982,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0083,
+          "y": -0.0009,
+          "pitch_deg": -0.16,
+          "yaw_deg": -1.5
+        }
+      ]
+    },
+    {
+      "timestamp": 2998,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3014,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3053,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3069,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3085,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3101,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3116,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3133,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3149,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": -0.0018,
+          "pitch_deg": -0.32,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3165,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3180,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3211,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3234,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3250,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3266,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3282,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3298,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0063,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -1.14
+        }
+      ]
+    },
+    {
+      "timestamp": 3314,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3334,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3350,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3371,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3382,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3397,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3412,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3428,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3443,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3464,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0077,
+          "y": 0.0018,
+          "pitch_deg": 0.33,
+          "yaw_deg": -1.39
+        }
+      ]
+    },
+    {
+      "timestamp": 3487,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3498,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3513,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3534,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3550,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3566,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3582,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3598,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3610,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3624,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3636,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0044,
+          "y": 0.0024,
+          "pitch_deg": 0.43,
+          "yaw_deg": -0.79
+        }
+      ]
+    },
+    {
+      "timestamp": 3648,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3665,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3676,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3692,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3724,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3739,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3751,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3768,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3784,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3800,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3815,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0066,
+          "y": 0.0051,
+          "pitch_deg": 0.93,
+          "yaw_deg": -1.19
+        }
+      ]
+    },
+    {
+      "timestamp": 3833,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3843,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3871,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3883,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3898,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3914,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3930,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3946,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0072,
+          "y": 0.0078,
+          "pitch_deg": 1.41,
+          "yaw_deg": -1.29
+        }
+      ]
+    },
+    {
+      "timestamp": 3969,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": -0.0031,
+          "pitch_deg": -0.57,
+          "yaw_deg": -1.82
+        }
+      ]
+    },
+    {
+      "timestamp": 4005,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": -0.0031,
+          "pitch_deg": -0.57,
+          "yaw_deg": -1.82
+        }
+      ]
+    },
+    {
+      "timestamp": 4025,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": -0.0031,
+          "pitch_deg": -0.57,
+          "yaw_deg": -1.82
+        }
+      ]
+    },
+    {
+      "timestamp": 4041,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": -0.0031,
+          "pitch_deg": -0.57,
+          "yaw_deg": -1.82
+        }
+      ]
+    },
+    {
+      "timestamp": 4057,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": -0.0031,
+          "pitch_deg": -0.57,
+          "yaw_deg": -1.82
+        }
+      ]
+    },
+    {
+      "timestamp": 4068,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": -0.0031,
+          "pitch_deg": -0.57,
+          "yaw_deg": -1.82
+        }
+      ]
+    },
+    {
+      "timestamp": 4084,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0101,
+          "y": -0.0031,
+          "pitch_deg": -0.57,
+          "yaw_deg": -1.82
+        }
+      ]
+    },
+    {
+      "timestamp": 4100,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0091,
+          "y": 0.0016,
+          "pitch_deg": 0.29,
+          "yaw_deg": -1.63
+        }
+      ]
+    },
+    {
+      "timestamp": 4114,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0091,
+          "y": 0.0016,
+          "pitch_deg": 0.29,
+          "yaw_deg": -1.63
+        }
+      ]
+    },
+    {
+      "timestamp": 4143,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0091,
+          "y": 0.0016,
+          "pitch_deg": 0.29,
+          "yaw_deg": -1.63
+        }
+      ]
+    },
+    {
+      "timestamp": 4161,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0091,
+          "y": 0.0016,
+          "pitch_deg": 0.29,
+          "yaw_deg": -1.63
+        }
+      ]
+    },
+    {
+      "timestamp": 4185,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0091,
+          "y": 0.0016,
+          "pitch_deg": 0.29,
+          "yaw_deg": -1.63
+        }
+      ]
+    },
+    {
+      "timestamp": 4200,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0091,
+          "y": 0.0016,
+          "pitch_deg": 0.29,
+          "yaw_deg": -1.63
+        }
+      ]
+    },
+    {
+      "timestamp": 4216,
+      "faces": [
+        {
+          "face_id": "face_0",
+          "x": -0.0091,
+          "y": 0.0016,
+          "pitch_deg": 0.29,
+          "yaw_deg": -1.63
+        }
+      ]
+    }
+  ]
+}
