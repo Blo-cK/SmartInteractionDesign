@@ -1,0 +1,72 @@
+[
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120138",
+    "gaze_x": 960,
+    "gaze_y": 541,
+    "filename": "20251113_120138_360_00.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120140",
+    "gaze_x": 960,
+    "gaze_y": 541,
+    "filename": "20251113_120140_226_00.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120142",
+    "gaze_x": 958,
+    "gaze_y": 539,
+    "filename": "20251113_120142_054_00.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120144",
+    "gaze_x": 960,
+    "gaze_y": 539,
+    "filename": "20251113_120144_160_00.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120145",
+    "gaze_x": 960,
+    "gaze_y": 540,
+    "filename": "20251113_120145_888_01.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120148",
+    "gaze_x": 962,
+    "gaze_y": 540,
+    "filename": "20251113_120148_213_00.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120149",
+    "gaze_x": 960,
+    "gaze_y": 540,
+    "filename": "20251113_120149_802_00.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120151",
+    "gaze_x": 960,
+    "gaze_y": 541,
+    "filename": "20251113_120151_512_00.jpg"
+  },
+  {
+    "person_id": "person_000",
+    "timestamp": "20251113_120153",
+    "gaze_x": 956,
+    "gaze_y": 538,
+    "filename": "20251113_120153_403_00.jpg"
+  },
+  {
+    "person_id": "person_001",
+    "timestamp": "20251113_120145",
+    "gaze_x": 959,
+    "gaze_y": 540,
+    "filename": "20251113_120145_888_00.jpg"
+  }
+]
