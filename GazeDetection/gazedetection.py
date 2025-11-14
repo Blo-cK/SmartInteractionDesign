@@ -52,33 +52,51 @@ class GazeDetector:
         
         return face_tensor.to(self.device)
     
-    def detect_gaze(self, face_image, image_width=1920, image_height=1080):
+    def detect_gaze(self, face_image, face_bbox=None, frame_width=1920, frame_height=1080):
         """
-        Detect gaze direction and return x, y coordinates
+        Detect gaze direction and return comprehensive data
         
         Args:
             face_image: Face image as numpy array
-            image_width: Width of the full image/screen
-            image_height: Height of the full image/screen
+            face_bbox: Optional tuple (x, y, w, h) of face location in original frame
+            frame_width: Width of the original webcam frame
+            frame_height: Height of the original webcam frame
             
         Returns:
-            tuple: (x, y) coordinates of gaze point
+            dict: Dictionary with head rotation, position, and gaze data
         """
         # Preprocess the face image
         face_tensor = self.preprocess_face(face_image)
         
         with torch.no_grad():
-            # Get gaze predictions (pitch and yaw angles)
+            # Get gaze predictions (pitch and yaw angles in degrees)
             pitch, yaw = self.model(face_tensor)
             
             # Convert to numpy
-            pitch = pitch.cpu().numpy()[0]
-            yaw = yaw.cpu().numpy()[0]
+            pitch = float(pitch.cpu().numpy()[0])
+            yaw = float(yaw.cpu().numpy()[0])
         
-        # Convert angles to screen coordinates
-        x, y = self._angles_to_coordinates(pitch, yaw, image_width, image_height)
+        # Calculate relative head position if bbox provided
+        head_position = None
+        if face_bbox is not None:
+            x, y, w, h = face_bbox
+            # Calculate center of face relative to frame (0-1 normalized)
+            center_x = (x + w / 2) / frame_width
+            center_y = (y + h / 2) / frame_height
+            
+            head_position = {
+                "x": round(center_x, 4),
+                "y": round(center_y, 4)
+            }
         
-        return x, y
+        # Return comprehensive data
+        return {
+            "pitch": round(pitch, 2),  # Head rotation up/down (degrees)
+            "yaw": round(yaw, 2),      # Head rotation left/right (degrees)
+            "head_position": head_position,
+            "frame_width": frame_width,
+            "frame_height": frame_height
+        }
     
     def _angles_to_coordinates(self, pitch, yaw, width, height):
         """

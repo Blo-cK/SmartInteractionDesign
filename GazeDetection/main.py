@@ -76,18 +76,50 @@ def main():
                         print(f"⚠️  Could not load image: {face_file}")
                         continue
                     
-                    # Get gaze coordinates
-                    gaze_coords = gaze_detector.detect_gaze(face_image)
+                    # Load bounding box metadata
+                    meta_file = face_file.with_suffix('.json')
+                    bbox_info = None
+                    frame_width = 1920
+                    frame_height = 1080
                     
-                    if gaze_coords:
-                        gaze_results.append({
+                    if meta_file.exists():
+                        with open(meta_file, 'r') as f:
+                            metadata = json.load(f)
+                            bbox_info = metadata.get('bbox')
+                            frame_size = metadata.get('frame_size', {})
+                            frame_width = frame_size.get('width', 1920)
+                            frame_height = frame_size.get('height', 1080)
+                    
+                    # Get gaze data with bbox for position calculation
+                    face_bbox = None
+                    if bbox_info:
+                        face_bbox = (bbox_info['x'], bbox_info['y'], 
+                                    bbox_info['w'], bbox_info['h'])
+                    
+                    gaze_data = gaze_detector.detect_gaze(
+                        face_image,
+                        face_bbox=face_bbox,
+                        frame_width=frame_width,
+                        frame_height=frame_height
+                    )
+                    
+                    if gaze_data:
+                        result = {
                             "person_id": person_id,
                             "timestamp": timestamp,
-                            "gaze_x": gaze_coords[0],
-                            "gaze_y": gaze_coords[1],
-                            "filename": face_file.name
-                        })
-                        print(f"📍 Processed {face_file.name}: gaze at ({gaze_coords[0]:.2f}, {gaze_coords[1]:.2f})")
+                            "filename": face_file.name,
+                            "head_rotation": {
+                                "pitch": gaze_data["pitch"],
+                                "yaw": gaze_data["yaw"]
+                            },
+                            "head_position": gaze_data["head_position"]
+                        }
+                        gaze_results.append(result)
+                        pos = gaze_data['head_position']
+                        if pos:
+                            print(f"📍 {face_file.name}: pitch={gaze_data['pitch']}°, yaw={gaze_data['yaw']}°, pos=({pos['center_x']:.2f}, {pos['center_y']:.2f})")
+                        else:
+                            print(f"📍 {face_file.name}: pitch={gaze_data['pitch']}°, yaw={gaze_data['yaw']}°")
                         
                 except Exception as e:
                     print(f"❌ Error processing {face_file.name}: {e}")

@@ -1,72 +1,93 @@
 [
   {
     "person_id": "person_000",
-    "timestamp": "20251113_120138",
-    "gaze_x": 960,
-    "gaze_y": 541,
-    "filename": "20251113_120138_360_00.jpg"
+    "timestamp": "20251114_091350",
+    "filename": "20251114_091350_949_00.jpg",
+    "head_rotation": {
+      "pitch": 0.13,
+      "yaw": 0.29
+    },
+    "head_position": {
+      "x": 0.5398,
+      "y": 0.7681
+    }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251113_120140",
-    "gaze_x": 960,
-    "gaze_y": 541,
-    "filename": "20251113_120140_226_00.jpg"
+    "timestamp": "20251114_091352",
+    "filename": "20251114_091352_731_00.jpg",
+    "head_rotation": {
+      "pitch": 0.16,
+      "yaw": 0.31
+    },
+    "head_position": {
+      "x": 0.5398,
+      "y": 0.7681
+    }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251113_120142",
-    "gaze_x": 958,
-    "gaze_y": 539,
-    "filename": "20251113_120142_054_00.jpg"
+    "timestamp": "20251114_091354",
+    "filename": "20251114_091354_762_00.jpg",
+    "head_rotation": {
+      "pitch": 0.09,
+      "yaw": 0.27
+    },
+    "head_position": {
+      "x": 0.648,
+      "y": 0.75
+    }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251113_120144",
-    "gaze_x": 960,
-    "gaze_y": 539,
-    "filename": "20251113_120144_160_00.jpg"
+    "timestamp": "20251114_091356",
+    "filename": "20251114_091356_607_00.jpg",
+    "head_rotation": {
+      "pitch": 0.13,
+      "yaw": 0.28
+    },
+    "head_position": {
+      "x": 0.6762,
+      "y": 0.7222
+    }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251113_120145",
-    "gaze_x": 960,
-    "gaze_y": 540,
-    "filename": "20251113_120145_888_01.jpg"
+    "timestamp": "20251114_091358",
+    "filename": "20251114_091358_548_00.jpg",
+    "head_rotation": {
+      "pitch": 0.09,
+      "yaw": 0.23
+    },
+    "head_position": {
+      "x": 0.243,
+      "y": 0.7139
+    }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251113_120148",
-    "gaze_x": 962,
-    "gaze_y": 540,
-    "filename": "20251113_120148_213_00.jpg"
+    "timestamp": "20251114_091402",
+    "filename": "20251114_091402_374_00.jpg",
+    "head_rotation": {
+      "pitch": 0.13,
+      "yaw": 0.23
+    },
+    "head_position": {
+      "x": 0.5645,
+      "y": 0.6972
+    }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251113_120149",
-    "gaze_x": 960,
-    "gaze_y": 540,
-    "filename": "20251113_120149_802_00.jpg"
-  },
-  {
-    "person_id": "person_000",
-    "timestamp": "20251113_120151",
-    "gaze_x": 960,
-    "gaze_y": 541,
-    "filename": "20251113_120151_512_00.jpg"
-  },
-  {
-    "person_id": "person_000",
-    "timestamp": "20251113_120153",
-    "gaze_x": 956,
-    "gaze_y": 538,
-    "filename": "20251113_120153_403_00.jpg"
-  },
-  {
-    "person_id": "person_001",
-    "timestamp": "20251113_120145",
-    "gaze_x": 959,
-    "gaze_y": 540,
-    "filename": "20251113_120145_888_00.jpg"
+    "timestamp": "20251114_091405",
+    "filename": "20251114_091405_701_00.jpg",
+    "head_rotation": {
+      "pitch": 0.18,
+      "yaw": 0.26
+    },
+    "head_position": {
+      "x": 0.4254,
+      "y": 0.7222
+    }
   }
 ]

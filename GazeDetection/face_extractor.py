@@ -249,6 +249,21 @@ class WebcamFaceExtractor:
                     face_path = os.path.join(person_folder, face_filename)
                     
                     cv2.imwrite(face_path, face_img)
+                    
+                    # Save bounding box metadata
+                    meta_filename = f"{timestamp}_{i:02d}.json"
+                    meta_path = os.path.join(person_folder, meta_filename)
+                    
+                    frame_height, frame_width = frame.shape[:2]
+                    metadata = {
+                        "bbox": {"x": x1, "y": y1, "w": x2-x1, "h": y2-y1},
+                        "frame_size": {"width": frame_width, "height": frame_height}
+                    }
+                    
+                    import json
+                    with open(meta_path, 'w') as f:
+                        json.dump(metadata, f)
+                    
                     print(f"💾 Saved face: {face_id}/{face_filename} "
                           f"({face_width}x{face_height})")
                     
