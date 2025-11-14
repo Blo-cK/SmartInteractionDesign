@@ -1,0 +1,6 @@
+aiokafka
+numpy
+opencv-python
+cramjam
+nats-py
+flask
