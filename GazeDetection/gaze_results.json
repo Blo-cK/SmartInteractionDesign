@@ -1,93 +1,93 @@
 [
   {
     "person_id": "person_000",
-    "timestamp": "20251114_091350",
-    "filename": "20251114_091350_949_00.jpg",
+    "timestamp": "20251114_110203",
+    "filename": "20251114_110203_328_00.jpg",
     "head_rotation": {
-      "pitch": 0.13,
-      "yaw": 0.29
+      "pitch": 0.33,
+      "yaw": 0.11
     },
     "head_position": {
       "x": 0.5398,
-      "y": 0.7681
+      "y": 0.6715
     }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251114_091352",
-    "filename": "20251114_091352_731_00.jpg",
+    "timestamp": "20251114_110205",
+    "filename": "20251114_110205_393_00.jpg",
     "head_rotation": {
-      "pitch": 0.16,
-      "yaw": 0.31
+      "pitch": 0.36,
+      "yaw": 0.13
     },
     "head_position": {
-      "x": 0.5398,
-      "y": 0.7681
+      "x": 0.5164,
+      "y": 0.6715
     }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251114_091354",
-    "filename": "20251114_091354_762_00.jpg",
+    "timestamp": "20251114_110207",
+    "filename": "20251114_110207_248_00.jpg",
     "head_rotation": {
-      "pitch": 0.09,
-      "yaw": 0.27
+      "pitch": 0.28,
+      "yaw": 0.18
     },
     "head_position": {
       "x": 0.648,
-      "y": 0.75
+      "y": 0.6576
     }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251114_091356",
-    "filename": "20251114_091356_607_00.jpg",
+    "timestamp": "20251114_110211",
+    "filename": "20251114_110211_793_00.jpg",
     "head_rotation": {
-      "pitch": 0.13,
-      "yaw": 0.28
+      "pitch": 0.41,
+      "yaw": -0.07
     },
     "head_position": {
-      "x": 0.6762,
-      "y": 0.7222
+      "x": 0.4434,
+      "y": 0.5514
     }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251114_091358",
-    "filename": "20251114_091358_548_00.jpg",
+    "timestamp": "20251114_110215",
+    "filename": "20251114_110215_128_00.jpg",
     "head_rotation": {
-      "pitch": 0.09,
-      "yaw": 0.23
+      "pitch": 0.3,
+      "yaw": -0.04
     },
     "head_position": {
-      "x": 0.243,
-      "y": 0.7139
+      "x": 0.2855,
+      "y": 0.6076
     }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251114_091402",
-    "filename": "20251114_091402_374_00.jpg",
+    "timestamp": "20251114_110217",
+    "filename": "20251114_110217_216_00.jpg",
     "head_rotation": {
-      "pitch": 0.13,
-      "yaw": 0.23
+      "pitch": 0.26,
+      "yaw": 0.19
     },
     "head_position": {
-      "x": 0.5645,
-      "y": 0.6972
+      "x": 0.5926,
+      "y": 0.5576
     }
   },
   {
     "person_id": "person_000",
-    "timestamp": "20251114_091405",
-    "filename": "20251114_091405_701_00.jpg",
+    "timestamp": "20251114_110219",
+    "filename": "20251114_110219_084_00.jpg",
     "head_rotation": {
-      "pitch": 0.18,
-      "yaw": 0.26
+      "pitch": 0.36,
+      "yaw": 0.11
     },
     "head_position": {
-      "x": 0.4254,
-      "y": 0.7222
+      "x": 0.509,
+      "y": 0.6576
     }
   }
 ]
