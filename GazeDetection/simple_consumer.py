@@ -1,4 +1,4 @@
-"""Consumer: NATS → Gaze Detection"""
+"""Consumer: NATS → Gaze Detection → Kafka"""
 import asyncio
 import cv2
 import numpy as np
@@ -8,6 +8,7 @@ import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from architecture.library.input_layer import InputLayerConsumer
+from architecture.library.output_layer import OutputLayerProducer
 from gazedetection import GazeDetector
 
 
@@ -15,6 +16,10 @@ async def run_consumer(num_frames=10):
     consumer = InputLayerConsumer(
         topic="gaze.frames",
         broker="152.53.32.66:4222"
+    )
+    
+    kafka = OutputLayerProducer(
+        broker="152.53.32.66:9094"
     )
     
     gaze_detector = GazeDetector()
@@ -25,7 +30,7 @@ async def run_consumer(num_frames=10):
     print("🎯 Processing faces...")
     count = [0]
     
-    async def process_message(msg):
+    async def handle_message(msg):
         face_data = msg.data
         meta = msg.headers or {}
         
@@ -51,20 +56,35 @@ async def run_consumer(num_frames=10):
         # Gaze detection
         gaze = gaze_detector.detect_gaze(face_img, bbox, w, h)
         
-        # Print result
+        # Send to Kafka
         face_id = meta.get('face_id', 'unknown')
-        print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}°")
+        result = {
+            'face_id': face_id,
+            'bbox': bbox_info,
+            'gaze': gaze
+        }
+        
+        header = {
+            'source_id': meta.get('source_id', 'camera1'),
+            'time_stamp': meta.get('time_stamp', '0')
+        }
+        
+        await kafka.sendMetadata(header, result, 'gaze_detector')
+        
+        print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}° → Kafka")
         
         count[0] += 1
     
-    await consumer.consume(onFrame=process_message)
+    # Use InputLayerConsumer.consume() as per README
+    await consumer.consume(onFrame=handle_message)
     
     # Wait for all messages
     await asyncio.sleep(30)
     
     try:
         await consumer.disconnect()
-    except Exception as e:
+        await kafka.disconnect()
+    except Exception:
         pass
     
     print(f"✅ Done! Processed {count[0]} faces")

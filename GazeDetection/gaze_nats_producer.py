@@ -4,10 +4,27 @@ import sys
 import os
 import cv2
 import time
+import json
+from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from architecture.library.input_layer import InputLayerProducer
 from face_extractor import WebcamFaceExtractor
+
+
+class FaceFrameGrabber:
+    """Adapter to provide face images with metadata"""
+    def __init__(self, face_img, bbox_info, face_id):
+        self.face_img = face_img
+        self.bbox_info = bbox_info
+        self.face_id = face_id
+        h, w = face_img.shape[:2]
+        self.width = w
+        self.height = h
+        
+    def read_frame(self):
+        _, buffer = cv2.imencode('.jpg', self.face_img)
+        return buffer.tobytes()
 
 
 async def run_producer(num_frames=10):
@@ -17,9 +34,13 @@ async def run_producer(num_frames=10):
         broker="152.53.32.66:4222"
     )
     
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    frames_folder = os.path.join(base_dir, "frames")
+    faces_folder = os.path.join(base_dir, "faces")
+    
     extractor = WebcamFaceExtractor(
-        frames_folder="frames",
-        faces_folder="faces",
+        frames_folder=frames_folder,
+        faces_folder=faces_folder,
         max_frames=num_frames,
         capture_interval=0.5
     )
@@ -35,11 +56,8 @@ async def run_producer(num_frames=10):
     
     print("📤 Sending faces to NATS...")
     
-    import json
-    from pathlib import Path
-    
     sent = 0
-    for person_folder in Path("faces").glob("person_*"):
+    for person_folder in Path(faces_folder).glob("person_*"):
         face_files = sorted(person_folder.glob("*.jpg"))
         for face_file in face_files:
             face_img = cv2.imread(str(face_file))
@@ -53,16 +71,11 @@ async def run_producer(num_frames=10):
                 with open(meta_file, 'r') as f:
                     bbox_info = json.load(f).get('bbox', {})
             
-            _, buffer = cv2.imencode('.jpg', face_img)
-            metadata = {
-                'time_stamp': str(int(time.time())),
-                'source_id': 'camera1',
-                'face_id': person_folder.name,
-                'bbox': json.dumps(bbox_info),
-                'encoding': 'jpeg'
-            }
+            # Create frame grabber adapter
+            grabber = FaceFrameGrabber(face_img, bbox_info, person_folder.name)
             
-            await producer._send_message(buffer.tobytes(), metadata)
+            # Use InputLayerProducer.send_frame() as per README
+            await producer.send_frame(grabber, fps=30)
             sent += 1
             print(f"✅ {sent} faces")
     
