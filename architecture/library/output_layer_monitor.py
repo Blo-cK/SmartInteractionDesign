@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from flask import Flask, render_template_string, jsonify
 
-from architecture.library.output_layer import OutputLayerReceiver, OutputLayerMetadata
+from output_layer import OutputLayerReceiver, OutputLayerMetadata
 
 
 class OutputLayerMonitor:

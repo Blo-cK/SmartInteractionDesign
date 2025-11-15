@@ -8,8 +8,9 @@ python -m venv .venv
 then install the packages from the requirements.txt: 
 pip install -r requirements.txt
 
-
-.venv\Scripts\python -m architecture.examples.workflow   
+python workflow.py
+or
+python output_layer_monitor.py
 
 **Input & Output Layer - Architecture Overview**
 

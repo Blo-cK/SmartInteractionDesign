@@ -1,7 +1,9 @@
 import asyncio
 from datetime import datetime
 
-from architecture.library.output_layer import OutputLayerMetadata, OutputLayerProducer, OutputLayerReceiver
+from library.output_layer import OutputLayerMetadata, OutputLayerProducer, OutputLayerReceiver
+
+
 
 
 async def onMetadataReceived(metadata):

@@ -3,7 +3,8 @@ import asyncio
 import cv2
 import numpy as np
 
-from architecture.library.input_layer import InputLayerConsumerThread
+from SmartInteractionDesign.architecture.library.input_layer import InputLayerConsumerThread
+
 
 
 async def main():

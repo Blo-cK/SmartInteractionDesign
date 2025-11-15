@@ -1,8 +1,10 @@
 import asyncio
 import uuid
 
-from architecture.library.frame_grabber import FrameGrabber
-from architecture.library.input_layer import InputLayerProducer
+from SmartInteractionDesign.architecture.library.frame_grabber import FrameGrabber
+from SmartInteractionDesign.architecture.library.input_layer import InputLayerProducer
+
+
 
 
 

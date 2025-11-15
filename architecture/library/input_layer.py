@@ -8,7 +8,7 @@ from typing import Callable, Optional
 import cv2
 import threading
 
-from architecture.library.frame_grabber import FrameGrabber
+from .frame_grabber import FrameGrabber
 
 @dataclass
 class InputLayerMetadata:

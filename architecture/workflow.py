@@ -8,11 +8,12 @@ import cv2
 import numpy as np
 from datetime import datetime
 import os, sys
-print("CWD:", os.getcwd())
-print("PATH:", sys.path)
-from architecture.library.frame_grabber import FrameGrabber
-from architecture.library.input_layer import InputLayerConsumer, InputLayerProducer
-from architecture.library.output_layer import OutputLayerProducer
+
+from library.frame_grabber import FrameGrabber
+from library.input_layer import InputLayerConsumer, InputLayerProducer
+from library.output_layer import OutputLayerProducer
+
+
 
 
 
