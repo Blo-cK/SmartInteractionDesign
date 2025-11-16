@@ -64,15 +64,10 @@ async def run_consumer(num_frames=10):
             'gaze': gaze
         }
         
-        header = {
-            'source_id': meta.get('source_id', 'camera1'),
-            'time_stamp': meta.get('time_stamp', '0')
-        }
-        
-        await kafka.sendMetadata(header, result, 'gaze_detector')
+        await kafka.sendMetadata(meta, result, 'gaze_detector')
         
         print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}° → Kafka")
-        
+        print(meta, result)
         count[0] += 1
     
     # Use InputLayerConsumer.consume() as per README

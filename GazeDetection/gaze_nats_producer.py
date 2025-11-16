@@ -71,11 +71,27 @@ async def run_producer(num_frames=10):
                 with open(meta_file, 'r') as f:
                     bbox_info = json.load(f).get('bbox', {})
             
-            # Create frame grabber adapter
-            grabber = FaceFrameGrabber(face_img, bbox_info, person_folder.name)
+            # Send frame with custom metadata
+            frame_bytes = cv2.imencode('.jpg', face_img)[1].tobytes()
+            h, w = face_img.shape[:2]
             
-            # Use InputLayerProducer.send_frame() as per README
-            await producer.send_frame(grabber, fps=30)
+            # Create base metadata using InputLayerMetadata structure
+            from architecture.library.input_layer import InputLayerMetadata
+            import time as time_module
+            metadata = InputLayerMetadata(
+                time_stamp=int(time_module.time()),
+                source_id='camera1',
+                encoding='jpeg',
+                width=w,
+                height=h
+            ).as_dict()
+            
+            # Add custom metadata
+            metadata['face_id'] = person_folder.name
+            metadata['bbox'] = json.dumps(bbox_info)
+            
+            # Send using _send_message to include custom metadata
+            await producer._send_message(frame_bytes, metadata)
             sent += 1
             print(f"✅ {sent} faces")
     
