@@ -36,7 +36,9 @@ class OutputLayerProducer:
         self.producer = AIOKafkaProducer(
             bootstrap_servers=self.broker,
             value_serializer=self._smart_serializer,
-            compression_type="lz4",
+            compression_type=None,
+            linger_ms=5,
+            max_request_size=1024 * 1024,
             acks=0
         )
 
