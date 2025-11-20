@@ -62,8 +62,8 @@ class OutputLayerProducer:
             return f"output.{metadata.source_id}.{metadata.service_id}"
         raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
 
-    async def sendMetadata(self, header, result, service_id : str):
-        """Send serialized metadata to Kafka"""
+    async def sendData(self, header, result, service_id : str):
+        """Send serialized data to Kafka"""
         if not self._connected:
             await self._connect()
 
@@ -72,9 +72,9 @@ class OutputLayerProducer:
             topic = self._build_topic(metadata)
             data = metadata.to_dict()
             await self.producer.send(topic, data)
-            print(f"[SmartInteraction] Sent metadata to topic '{topic}' (result={metadata.result})")
+            print(f"[SmartInteraction] Sent data to topic '{topic}' (result={metadata.result})")
         except Exception as e:
-            print(f"[SmartInteraction] Error sending metadata: {e}")
+            print(f"[SmartInteraction] Error sending data: {e}")
 
 
     def _map_header_to_output_layer_metadata(self, header: dict[str, Any], result, service_id) -> OutputLayerMetadata:
@@ -125,8 +125,8 @@ class OutputLayerReceiver:
         self._connected = True
         print(f"[SmartInteraction] Connected OutputLayerReceiver to topic '{topic}'")
 
-    async def receiveMetadata(self, source_name: str, service: str, onMetadata: Callable):
-        """Consume metadata messages and call callback (single-topic mode)"""
+    async def receiveData(self, source_name: str, service: str, onData: Callable):
+        """Consume data messages and call callback (single-topic mode)"""
         topic = f"output.{source_name}.{service}"
 
         if not self._connected:
@@ -138,10 +138,10 @@ class OutputLayerReceiver:
                 metadata_dict = msg.value
                 try:
                     metadata = OutputLayerMetadata(**metadata_dict)
-                    if onMetadata:
-                        await onMetadata(metadata)
+                    if onData:
+                        await onData(metadata)
                 except Exception as e:
-                    print(f"[SmartInteraction] Error parsing metadata: {e}")
+                    print(f"[SmartInteraction] Error parsing data: {e}")
         finally:
             await self.consumer.stop()
             self._connected = False
@@ -167,8 +167,8 @@ class OutputLayerReceiver:
         self._connected = True
         print(f"[SmartInteraction] Connected OutputLayerReceiver with pattern '{pattern}'")
 
-    async def receiveAllMetadata(self, onMetadata: Callable):
-        """Consume metadata from all topics matching output.*.*"""
+    async def receiveAllData(self, onData: Callable):
+        """Consume data from all topics matching output.*.*"""
         pattern = r"output\..*\..*"
 
         if not self._connected:
@@ -180,10 +180,10 @@ class OutputLayerReceiver:
                 metadata_dict = msg.value
                 try:
                     metadata = OutputLayerMetadata(**metadata_dict)
-                    if onMetadata:
-                        await onMetadata(metadata)
+                    if onData:
+                        await onData(metadata)
                 except Exception as e:
-                    print(f"[SmartInteraction] Error parsing metadata: {e}")
+                    print(f"[SmartInteraction] Error parsing data: {e}")
         finally:
             await self.consumer.stop()
             self._connected = False

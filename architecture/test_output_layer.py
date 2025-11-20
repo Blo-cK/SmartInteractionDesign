@@ -13,7 +13,7 @@ async def receive_loop():
     
     receiver = OutputLayerReceiver(group_id="test-group")
     try:
-        await receiver.receiveMetadata("camera1", "object_detection", onMetadataReceived)
+        await receiver.receiveData("camera1", "object_detection", onMetadataReceived)
     finally:
         await receiver.disconnect()
 
@@ -26,7 +26,7 @@ async def send_once():
         timestamp_producer=datetime.utcnow().isoformat(),
         result={"status": "ok", "objects": ["car", "person"]}
     )
-    await producer.sendMetadata(metadata)
+    await producer.sendData(metadata)
     await producer.disconnect()
 
 async def main():

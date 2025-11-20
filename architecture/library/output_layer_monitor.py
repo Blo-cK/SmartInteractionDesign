@@ -66,7 +66,7 @@ class OutputLayerMonitor:
 
         try:
             
-            await receiver.receiveAllMetadata(self._msg_callback)
+            await receiver.receiveAllData(self._msg_callback)
         finally:
             await receiver.disconnect()
 

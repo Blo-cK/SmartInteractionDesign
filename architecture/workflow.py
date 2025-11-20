@@ -80,7 +80,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
         result = await fake_processing(frame)
 
         # send  Output Layer
-        await output_producer.sendMetadata(
+        await output_producer.sendData(
             header=msg.headers,
             result=result,
             service_id=service_name

@@ -64,7 +64,7 @@ async def run_consumer(num_frames=10):
             'headgesture': headgesture
         }
         
-        await kafka.sendMetadata(meta, result, 'headgesture_recognition')
+        await kafka.sendData(meta, result, 'headgesture_recognition')
         
         print(f"✅ {face_id}: head_gesture={headgesture['head_gesture']}, confidence={headgesture['confidence']} → Kafka")
         print(meta, result)

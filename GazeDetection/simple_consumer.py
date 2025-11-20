@@ -65,7 +65,7 @@ async def run_consumer(num_frames=10):
             'gaze': gaze
         }
         
-        await kafka.sendMetadata(meta, result, 'gaze_detector')
+        await kafka.sendData(meta, result, 'gaze_detector')
         
         print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}° → Kafka")
         print(meta, result)

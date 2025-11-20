@@ -54,7 +54,7 @@ async def main():
         
         result = await deepFaceDetection.analyze_frame(face_img,"UNKNOWN")
         
-        await kafka.sendMetadata(msg.headers, result, 'model_deepFace')
+        await kafka.sendData(msg.headers, result, 'model_deepFace')
     
     consumer = InputLayerConsumer(
         topic=NATS_TOPIC,
@@ -93,7 +93,7 @@ async def main():
                 personID = "unknown"
                 result = await asyncio.get_event_loop().run_in_executor(executor, deepFaceDetection.analyze_frame, frame, personID)
                 meta = {"time_stamp":result.get('timestamp'), "source_id":"model_deepFace"}
-                await kafka.sendMetadata(meta, result, 'model_deepFace')
+                await kafka.sendData(meta, result, 'model_deepFace')
                 try:
                     print(json.dumps(result, default=str))
                 except Exception:
