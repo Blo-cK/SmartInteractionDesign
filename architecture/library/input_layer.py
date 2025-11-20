@@ -4,24 +4,30 @@ import threading
 import time
 import nats
 import numpy as np
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 import cv2
 import threading
 
 from .frame_grabber import FrameGrabber
 
 @dataclass
-class InputLayerMetadata:
+class BaseInputMetadata:
     time_stamp:str
     source_id:str
     encoding:str
+    def as_dict(self):
+        return {k: str(v) for k, v in asdict(self).items()}
+
+@dataclass
+class InputLayerMetadataVideo(BaseInputMetadata):
     width:int
     height:int
     
-    def as_dict(self):
-        return {k: str(v) for k, v in asdict(self).items()}
-    
-    
+@dataclass
+class InputLayerMetadataSound(BaseInputMetadata):
+    sample_rate: int
+    channels: int
+    sample_format: Literal["pcm16", "float32", "opus"]
 
 class InputLayerProducer:
     def __init__(self, topic:str, source_name:str, broker:str = "152.53.32.66:4222"):
@@ -51,13 +57,16 @@ class InputLayerProducer:
             print('Message sent successfully')
         except Exception as e:
             print(f"Error sending message: {e}")
-            
-            
+    
+    #TODO: Implement sending Audio Chunks
+    async def send_audio_chunk():
+        return
+    
     async def send_frame(self, frame_grabber:FrameGrabber, fps=30):
         """Capture a frame from FrameGrabber and send to NATS"""
         frame_bytes = frame_grabber.read_frame()
         if frame_bytes:
-            metadata = InputLayerMetadata(
+            metadata = InputLayerMetadataVideo(
                 time_stamp=int(time.time()),
                 source_id=self.id,
                 encoding="jpeg",
