@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass, asdict
 import asyncio
 import threading
@@ -11,7 +12,7 @@ import threading
 from .frame_grabber import FrameGrabber
 
 @dataclass
-class BaseInputMetadata:
+class BaseInputMetadata(ABC):
     time_stamp:str
     source_id:str
     encoding:str
