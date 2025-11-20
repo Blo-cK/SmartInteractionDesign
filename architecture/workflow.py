@@ -10,7 +10,7 @@ from datetime import datetime
 import os, sys
 
 from library.frame_grabber import FrameGrabber
-from library.input_layer import InputLayerConsumer, InputLayerProducer
+from library.input_layer import InputLayerConsumer, InputLayerProducer, InputResultWrapper
 from library.output_layer import OutputLayerProducer
 
 
@@ -60,7 +60,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
 
         return {"status": "ok", "objects": ["car", "person"]}
 
-    async def handle_message(msg):
+    async def handle_message(result: InputResultWrapper):
         """
         process of nats messages
         This method processes only data which comes as jpeg, if another format is send like mp3 this method needs to be adapted.
@@ -68,7 +68,8 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
         to the Output Hub.
         """
         # JPEG -> numpy
-        data = np.frombuffer(msg.data, np.uint8)
+        
+        data = np.frombuffer(result.msg.data, np.uint8)
         frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
         # Show frame
@@ -81,7 +82,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
 
         # send  Output Layer
         await output_producer.sendData(
-            header=msg.headers,
+            header=result.msg.headers,
             result=result,
             service_id=service_name
         )
