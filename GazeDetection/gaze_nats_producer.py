@@ -8,7 +8,9 @@ import json
 from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from architecture.library.input_layer import InputLayerProducer
+from architecture.library.input_layer import (
+    InputLayerProducer, InputLayerMetadataVideo
+)
 from face_extractor import WebcamFaceExtractor
 
 
@@ -75,11 +77,9 @@ async def run_producer(num_frames=10):
             frame_bytes = cv2.imencode('.jpg', face_img)[1].tobytes()
             h, w = face_img.shape[:2]
             
-            # Create base metadata using InputLayerMetadata structure
-            from architecture.library.input_layer import InputLayerMetadata
-            import time as time_module
-            metadata = InputLayerMetadata(
-                time_stamp=int(time_module.time()),
+            # Create base metadata
+            metadata = InputLayerMetadataVideo(
+                time_stamp=int(time.time()),
                 source_id='camera1',
                 encoding='jpeg',
                 width=w,

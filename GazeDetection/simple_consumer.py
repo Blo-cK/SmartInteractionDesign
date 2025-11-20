@@ -61,6 +61,7 @@ async def run_consumer(num_frames=10):
         result = {
             'face_id': face_id,
             'bbox': bbox_info,
+            'frame_size': frame_size,
             'gaze': gaze
         }
         
