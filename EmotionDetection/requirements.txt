@@ -6,4 +6,3 @@ torch
 torchvision
 numpy
 tf-keras
-requests
