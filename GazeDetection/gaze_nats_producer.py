@@ -5,7 +5,6 @@ import os
 import cv2
 import time
 import json
-from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from architecture.library.input_layer import (
@@ -36,67 +35,82 @@ async def run_producer(num_frames=10):
         broker="152.53.32.66:4222"
     )
     
+    await producer.connect()
+    
     base_dir = os.path.dirname(os.path.abspath(__file__))
     frames_folder = os.path.join(base_dir, "frames")
     faces_folder = os.path.join(base_dir, "faces")
+    
+    sent = [0]  # Use list for closure
+    
+    # Callback to send face immediately after extraction
+    def on_face_extracted(face_path, meta_path, face_id):
+        # Read face and metadata
+        face_img = cv2.imread(face_path)
+        if face_img is None:
+            return
+        
+        with open(meta_path, 'r') as f:
+            file_metadata = json.load(f)
+        
+        bbox_info = file_metadata.get('bbox', {})
+        frame_size = file_metadata.get('frame_size', {})
+        h, w = face_img.shape[:2]
+        
+        # Encode face
+        frame_bytes = cv2.imencode('.jpg', face_img)[1].tobytes()
+        
+        # Create metadata
+        metadata = InputLayerMetadataVideo(
+            time_stamp=int(time.time()),
+            source_id='camera1',
+            encoding='jpeg',
+            width=w,
+            height=h
+        ).as_dict()
+        
+        # Add custom fields
+        metadata['face_id'] = face_id
+        metadata['bbox'] = json.dumps(bbox_info)
+        metadata['frame_size'] = json.dumps(frame_size)
+        
+        # Schedule async send
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(producer._send_message(frame_bytes, metadata))
+        loop.close()
+        
+        sent[0] += 1
+        print(f"📤 Sent face {sent[0]}: {face_id}")
+        
+        # Delete files after sending
+        try:
+            if os.path.exists(face_path):
+                os.remove(face_path)
+            if os.path.exists(meta_path):
+                os.remove(meta_path)
+        except Exception as e:
+            print(f"⚠️ Could not delete files: {e}")
     
     extractor = WebcamFaceExtractor(
         frames_folder=frames_folder,
         faces_folder=faces_folder,
         max_frames=num_frames,
-        capture_interval=0.5
+        capture_interval=0.01,
+        on_face_extracted=on_face_extracted
     )
     
-    await producer.connect()
     extractor.reset_directories()
     
-    print(f"🎥 Capturing {num_frames} frames...")
+    print(f"🎥 Capturing {num_frames} frames (send immediately after extraction)...")
     extractor.start_capture(camera_index=0)
     
     while extractor.is_running:
         await asyncio.sleep(0.5)
     
-    print("📤 Sending faces to NATS...")
-    
-    sent = 0
-    for person_folder in Path(faces_folder).glob("person_*"):
-        face_files = sorted(person_folder.glob("*.jpg"))
-        for face_file in face_files:
-            face_img = cv2.imread(str(face_file))
-            if face_img is None:
-                continue
-            
-            # Load metadata
-            meta_file = face_file.with_suffix('.json')
-            bbox_info = {}
-            if meta_file.exists():
-                with open(meta_file, 'r') as f:
-                    bbox_info = json.load(f).get('bbox', {})
-            
-            # Send frame with custom metadata
-            frame_bytes = cv2.imencode('.jpg', face_img)[1].tobytes()
-            h, w = face_img.shape[:2]
-            
-            # Create base metadata
-            metadata = InputLayerMetadataVideo(
-                time_stamp=int(time.time()),
-                source_id='camera1',
-                encoding='jpeg',
-                width=w,
-                height=h
-            ).as_dict()
-            
-            # Add custom metadata
-            metadata['face_id'] = person_folder.name
-            metadata['bbox'] = json.dumps(bbox_info)
-            
-            # Send using _send_message to include custom metadata
-            await producer._send_message(frame_bytes, metadata)
-            sent += 1
-            print(f"✅ {sent} faces")
-    
+    await asyncio.sleep(0.5)  # Allow final sends
     await producer.disconnect()
-    print(f"✅ {sent} faces → NATS")
+    print(f"✅ {sent[0]} faces → NATS (real-time)")
 
 
 if __name__ == "__main__":

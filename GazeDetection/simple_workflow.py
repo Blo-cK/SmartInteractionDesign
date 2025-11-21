@@ -1,4 +1,4 @@
-"""Workflow: 10 Frames Face Extractor → NATS → Gaze → Kafka"""
+"""Workflow: Face Extractor → NATS → Gaze → Kafka"""
 import asyncio
 
 
@@ -10,7 +10,7 @@ async def run_workflow():
     
     await asyncio.gather(
         run_producer(10),
-        run_consumer(10)
+        run_consumer()
     )
     
     print("\n✅ Pipeline Complete!")

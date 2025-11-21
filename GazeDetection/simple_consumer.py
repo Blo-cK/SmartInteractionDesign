@@ -12,7 +12,7 @@ from architecture.library.output_layer import OutputLayerProducer
 from gazedetection import GazeDetector
 
 
-async def run_consumer(num_frames=10):
+async def run_consumer():
     consumer = InputLayerConsumer(
         topic="gaze.frames",
         broker="152.53.32.66:4222"
@@ -41,15 +41,16 @@ async def run_consumer(num_frames=10):
         if face_img is None:
             return
         
-        # Parse bbox from metadata
+        # Parse bbox and frame_size from metadata
         bbox_info = json.loads(meta.get('bbox', '{}'))
+        frame_size = json.loads(meta.get('frame_size', '{}'))
+        
         bbox = None
         if bbox_info:
             bbox = (bbox_info['x'], bbox_info['y'],
                    bbox_info['w'], bbox_info['h'])
         
         # Get frame dimensions
-        frame_size = bbox_info.get('frame_size', {})
         w = frame_size.get('width', 1920)
         h = frame_size.get('height', 1080)
         
