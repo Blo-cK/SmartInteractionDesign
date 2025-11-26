@@ -9,7 +9,7 @@ async def run_workflow():
     print("🚀 Pipeline: Face Extractor → NATS → Gaze → Kafka (10 frames)")
     
     await asyncio.gather(
-        run_producer(10),
+        run_producer(1000),
         run_consumer()
     )
     
