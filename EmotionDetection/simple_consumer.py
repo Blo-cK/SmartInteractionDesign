@@ -14,7 +14,7 @@ from architecture.library.output_layer import OutputLayerProducer
 
 NUM_FRAMES=10
 IS_VISUALIZE_ENABLED = True  # set False to disable cv2 window
-NATS_TOPIC="gaze.frames",
+NATS_TOPIC="gaze.frames"
 NATS_BROKER="152.53.32.66:4222"
 KAFKA_BROKER="152.53.32.66:9094"
 
@@ -32,7 +32,7 @@ async def main():
     async def handle_message(msg):
         face_data = msg.data
         meta = msg.headers or {}
-        
+
         # Decode face image
         face_array = np.frombuffer(face_data, dtype=np.uint8)
         face_img = cv2.imdecode(face_array, cv2.IMREAD_COLOR)
@@ -52,8 +52,8 @@ async def main():
         w = frame_size.get('width', 1920)
         h = frame_size.get('height', 1080)
         
-        result = await deepFaceDetection.analyze_frame(face_img,"UNKNOWN")
-        
+        result = deepFaceDetection.analyze_frame(face_img,"UNKNOWN")
+        print(result)
         await kafka.sendData(msg.headers, result, 'model_deepFace')
     
     consumer = InputLayerConsumer(
