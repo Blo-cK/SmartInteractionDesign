@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from flask import Flask, render_template_string, jsonify
 
-from output_layer import OutputLayerReceiver, OutputLayerMetadata
+from architecture.library.output_layer import OutputLayerReceiver, OutputLayerMetadata
 
 
 class OutputLayerMonitor:
@@ -65,7 +65,6 @@ class OutputLayerMonitor:
         receiver = OutputLayerReceiver(broker=self.broker, group_id=None)
 
         try:
-            
             await receiver.receiveAllData(self._msg_callback)
         finally:
             await receiver.disconnect()
@@ -204,6 +203,12 @@ class OutputLayerMonitor:
 
 <h2>Empfangene Metadaten</h2>
 
+<!-- FILTER -->
+<label for="serviceFilter"><b>Service filtern:</b></label>
+<select id="serviceFilter" onchange="refreshTable()">
+    <option value="">Alle</option>
+</select>
+
 <table id="msg_table">
         <thead>
             <tr>
@@ -237,6 +242,24 @@ function closePopup() {
     document.getElementById("popup").style.display = "none";
 }
 
+// --- NEW: Update service dropdown ---
+function updateServiceDropdown(msgs) {
+    const dropdown = document.getElementById("serviceFilter");
+    const current = dropdown.value;
+
+    const services = [...new Set(msgs.map(m => m.service_id))];
+
+    dropdown.innerHTML = `<option value="">Alle</option>`;
+
+    services.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.innerText = s;
+        if (s === current) opt.selected = true;
+        dropdown.appendChild(opt);
+    });
+}
+
 async function refreshStats() {
     const res = await fetch("/api/stats");
     const s = await res.json();
@@ -247,7 +270,16 @@ async function refreshStats() {
 
 async function refreshTable() {
     const res = await fetch("/api/messages");
-    const msgs = await res.json();
+    let msgs = await res.json();
+
+    // update dropdown with all services
+    updateServiceDropdown(msgs);
+
+    // filter if selected
+    const selected = document.getElementById("serviceFilter").value;
+    if (selected) {
+        msgs = msgs.filter(m => m.service_id === selected);
+    }
 
     const body = document.querySelector("#msg_table tbody");
     body.innerHTML = "";
@@ -268,10 +300,6 @@ async function refreshTable() {
     });
 }
 
-
-
-
-
 setInterval(() => {
     refreshStats();
     refreshTable();
@@ -280,16 +308,4 @@ setInterval(() => {
 
 </body>
 </html>
-        """
-
-
-# ------------------------------------------------------
-# Run standalone
-# ------------------------------------------------------
-if __name__ == "__main__":
-    print("Starting monitor...")
-    monitor = OutputLayerMonitor(
-        source_name="camera1",
-        service="object_detection"
-    )
-    monitor.start(flask_port=5000)
+        """ 

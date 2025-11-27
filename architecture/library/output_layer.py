@@ -4,7 +4,7 @@ from typing import Any, Callable
 import json
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 
-from library.input_layer import InputResultWrapper
+from .input_layer import InputResultWrapper
 
 
 
@@ -70,11 +70,8 @@ class OutputLayerProducer:
         if not self._connected:
             await self._connect()
         
-        
         try:
-            print("test2")
             metadata = self._map_header_to_output_layer_metadata(input_result.msg.headers, result, service_id)
-            print("test", metadata)
             topic = self._build_topic(metadata)
             
             data = metadata.to_dict()

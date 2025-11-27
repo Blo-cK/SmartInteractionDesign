@@ -8,6 +8,7 @@ import numpy as np
 from typing import Callable, Literal, Optional
 import cv2
 import threading
+import logging
 
 from .frame_grabber import FrameGrabber
 
@@ -134,7 +135,7 @@ class InputLayerConsumer:
                 if onFrame:
                     await onFrame(InputResultWrapper(msg)) # Callback every Gruppe can write their own Callback fucntion so we have decoupled the functionality
             except Exception as e:
-                print("Error while consuming", e)    
+                logging.exception("Error while consuming")    
                 
         
         self.subscription = await self.consumer.subscribe(self.topic, cb=message_handler)
