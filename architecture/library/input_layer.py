@@ -8,6 +8,7 @@ import numpy as np
 from typing import Callable, Literal, Optional
 import cv2
 import threading
+import logging
 
 from .frame_grabber import FrameGrabber
 
@@ -92,6 +93,10 @@ class InputLayerProducer:
             self._connected= False
 
 
+class InputResultWrapper():
+
+    def __init__(self, msg):
+        self.msg = msg
 
 
 
@@ -112,18 +117,27 @@ class InputLayerConsumer:
             print(f"Connected to NATS topic '{self.topic}'")
         except Exception as e:
             print("Error happened: ",e)
-        
+
+    """ @staticmethod
+    def wrap_callback(cb):
+        async def wrapper(msg):
+            wrapped = InputResultWrapper(msg)
+            await cb(wrapped)
+        return wrapper   """  
+    
+
     async def consume(self, onFrame: Callable):
         if not self._connected and self.consumer:
-            await self.connect()
+            await self.connect()   
             
         async def message_handler(msg):
             try:
                 if onFrame:
-                    await onFrame(msg) # Callback every Gruppe can write their own Callback fucntion so we have decoupled the functionality
+                    await onFrame(InputResultWrapper(msg)) # Callback every Gruppe can write their own Callback fucntion so we have decoupled the functionality
             except Exception as e:
-                print("Error while consuming", e)    
+                logging.exception("Error while consuming")    
                 
+        
         self.subscription = await self.consumer.subscribe(self.topic, cb=message_handler)
     
     async def consume_video(self):

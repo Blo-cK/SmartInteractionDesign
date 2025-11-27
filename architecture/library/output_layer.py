@@ -4,6 +4,9 @@ from typing import Any, Callable
 import json
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 
+from .input_layer import InputResultWrapper
+
+
 
 class InvalidMetadataError(Exception):
     """Is being thrown if Metadata is missing or corrupt."""
@@ -62,14 +65,15 @@ class OutputLayerProducer:
             return f"output.{metadata.source_id}.{metadata.service_id}"
         raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
 
-    async def sendData(self, header, result, service_id : str):
+    async def sendData(self, input_result : InputResultWrapper, result, service_id : str):
         """Send serialized data to Kafka"""
         if not self._connected:
             await self._connect()
-
-        metadata = self._map_header_to_output_layer_metadata(header, result, service_id)
+        
         try:
+            metadata = self._map_header_to_output_layer_metadata(input_result.msg.headers, result, service_id)
             topic = self._build_topic(metadata)
+            
             data = metadata.to_dict()
             await self.producer.send(topic, data)
             print(f"[SmartInteraction] Sent data to topic '{topic}' (result={metadata.result})")
