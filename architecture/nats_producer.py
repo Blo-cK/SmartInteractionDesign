@@ -1,8 +1,8 @@
 import asyncio
 import uuid
 
-from SmartInteractionDesign.architecture.library.frame_grabber import FrameGrabber
-from SmartInteractionDesign.architecture.library.input_layer import InputLayerProducer
+from library.frame_grabber import FrameGrabber
+from library.input_layer import InputLayerProducer
 
 
 
@@ -15,7 +15,7 @@ async def main():
     myid = str(uuid.uuid4())
     
     
-    producer = InputLayerProducer(broker=broker,topic=topic,service_name=myid )
+    producer = InputLayerProducer(broker=broker,topic=topic,source_name=myid )
     grabber = FrameGrabber(device=0, width=1920, height=1080, jpeg_quality=40)
     await producer.connect() # you dont need to explicitly connect but its available
     try:
