@@ -97,7 +97,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
 ######################################################################
 async def main():
     topic = "input.cameras.camera1"
-    service_name = "example_service2"
+    service_name = "example_service"
 
     output_producer = OutputLayerProducer()
 
