@@ -51,8 +51,9 @@ async def main():
         frame_size = bbox_info.get('frame_size', {})
         w = frame_size.get('width', 1920)
         h = frame_size.get('height', 1080)
+        id = bbox_info.get('id')
         
-        result = deepFaceDetection.analyze_frame(face_img,"UNKNOWN")
+        result = deepFaceDetection.analyze_frame(face_img,id)
         print(result)
         await kafka.sendData(msg.headers, result, 'model_deepFace')
     
