@@ -649,11 +649,23 @@ setInterval(() => {
         """
 
 
+monitor = OutputLayerMonitor(
+    source_name="camera1",
+    service="object_detection"
+)
 
+app = monitor.app   # Flask instance exposed for Gunicorn
+
+def start_background():
+    import threading
+    threading.Thread(
+        target=lambda: asyncio.run(monitor._receiver_loop()),
+        daemon=True
+    ).start()
+
+start_background()
+
+# --- STANDALONE MODE ---
 if __name__ == "__main__":
-    print("Starting monitor...")
-    monitor = OutputLayerMonitor(
-        source_name="camera1",
-        service="object_detection"
-    )
+    # Start Flask dev server
     monitor.start(flask_port=5000)
