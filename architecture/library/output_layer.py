@@ -76,7 +76,7 @@ class OutputLayerProducer:
             
             data = metadata.to_dict()
             await self.producer.send(topic, data)
-            print(f"[SmartInteraction] Sent data to topic '{topic}' (result={metadata.result})")
+            
         except Exception as e:
             print(f"[SmartInteraction] Error sending data: {e}")
 
@@ -138,7 +138,7 @@ class OutputLayerReceiver:
 
         try:
             async for msg in self.consumer:
-                print(f"[SmartInteraction] Consumed message from '{msg.topic}' offset {msg.offset}")
+               
                 metadata_dict = msg.value
                 try:
                     metadata = OutputLayerMetadata(**metadata_dict)
@@ -180,7 +180,7 @@ class OutputLayerReceiver:
 
         try:
             async for msg in self.consumer:
-                print(f"[SmartInteraction] Consumed message from '{msg.topic}' offset {msg.offset}")
+                
                 metadata_dict = msg.value
                 try:
                     metadata = OutputLayerMetadata(**metadata_dict)

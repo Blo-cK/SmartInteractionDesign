@@ -9,11 +9,9 @@ import numpy as np
 from datetime import datetime
 import os, sys
 
-from architecture.library.frame_grabber import FrameGrabber
-from architecture.library.input_layer import InputLayerConsumer, InputLayerProducer, InputResultWrapper
-from architecture.library.output_layer import OutputLayerProducer
-
-
+from library.frame_grabber import FrameGrabber
+from library.input_layer import InputLayerConsumer, InputLayerProducer, InputResultWrapper
+from library.output_layer import OutputLayerProducer
 
 
 
@@ -97,7 +95,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
 ######################################################################
 async def main():
     topic = "input.cameras.camera1"
-    service_name = "example_service"
+    service_name = "example_service2"
 
     output_producer = OutputLayerProducer()
 

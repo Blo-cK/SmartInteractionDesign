@@ -1,4 +1,4 @@
-from  architecture.library.output_layer_monitor import OutputLayerMonitor
+from  SmartInteractionDesign.architecture.output_layer_monitor import OutputLayerMonitor
 
 
 if __name__ == "__main__":
