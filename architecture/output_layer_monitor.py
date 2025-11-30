@@ -10,7 +10,7 @@ from library.input_layer import TopicActivityMonitorMulti
 from library.output_layer import OutputLayerMetadata, OutputLayerReceiver
 
 
-
+_background_started = False
 
 class OutputLayerMonitor:
     """Runs a Kafka receiver in the background and exposes a Flask dashboard UI."""
@@ -643,23 +643,24 @@ app = monitor.app
 
 # -------- Shared Background System (for Flask AND Gunicorn) --------
 
-async def unified_async_runner():
-    # Start TopicActivityMonitorMulti
-    await monitor.monitor.connect()
+import threading
 
-    # Start OutputLayerReceiver loop
-    await monitor._receiver_loop()
+# Make sure the background async system is started only once
+if not globals().get("_background_started", False):
+    globals()["_background_started"] = True
 
+    def start_background_async():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-def start_background_async():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.create_task(unified_async_runner())
-    loop.run_forever()
+        # Start both async components
+        loop.create_task(monitor.monitor.connect())
+        loop.create_task(monitor._receiver_loop())
 
+        loop.run_forever()
 
-# Always start background async system when the module is imported
-threading.Thread(target=start_background_async, daemon=True).start()
+    threading.Thread(target=start_background_async, daemon=True).start()
+
 
 # -------- Standalone Flask Mode --------
 if __name__ == "__main__":
