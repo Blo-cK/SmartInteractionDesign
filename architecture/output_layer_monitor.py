@@ -24,13 +24,6 @@ class OutputLayerMonitor:
         self.start_time = time.time()
 
         self.monitor = TopicActivityMonitorMulti("input.>")
-        self.monitor_loop = asyncio.new_event_loop()
-        threading.Thread(target=self._start_monitor_loop, daemon=True).start()
-
-        # schedule monitor.connect() in that loop
-        self.monitor_loop.call_soon_threadsafe(
-            lambda: asyncio.create_task(self.monitor.connect())
-        )
 
         self.service_buffers = defaultdict(lambda: deque(maxlen=500))
 
@@ -641,27 +634,25 @@ monitor = OutputLayerMonitor(
 
 app = monitor.app   
 
-# -------- Shared Background System (for Flask AND Gunicorn) --------
-
 import threading
+import asyncio
 
-# Make sure the background async system is started only once
 if not globals().get("_background_started", False):
     globals()["_background_started"] = True
 
     def start_background_async():
         loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
 
-        # Start both async components
-        loop.create_task(monitor.monitor.connect())
-        loop.create_task(monitor._receiver_loop())
+        async def runner():
+            await monitor.monitor.connect()       # START INPUT MONITOR 
+            await monitor._receiver_loop()        # START OUTPUT RECEIVER 
 
+        loop.create_task(runner())
         loop.run_forever()
 
     threading.Thread(target=start_background_async, daemon=True).start()
 
 
-# -------- Standalone Flask Mode --------
+# Standalone Flask mode
 if __name__ == "__main__":
     monitor.app.run(host="0.0.0.0", port=5000)
