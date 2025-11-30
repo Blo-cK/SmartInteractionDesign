@@ -139,20 +139,6 @@ class OutputLayerMonitor:
         finally:
             await receiver.disconnect()
 
-    # --------------------------------------------------
-    # Start
-    # --------------------------------------------------
-    def start(self, flask_port: int = 5000):
-
-        threading.Thread(
-            target=lambda: asyncio.run(self._receiver_loop()),
-            daemon=True
-        ).start()
-
-        print("[Monitor] Kafka consumer running...")
-        print(f"[Monitor] Flask running at http://localhost:{flask_port}")
-
-        self.app.run(host="0.0.0.0", port=flask_port)
 
     # --------------------------------------------------
     # REST API Documentation Page
@@ -648,29 +634,33 @@ setInterval(() => {
 </div>
         """
 
-
 monitor = OutputLayerMonitor(
     source_name="camera1",
     service="object_detection"
 )
 
-app = monitor.app   # Flask instance exposed for Gunicorn
+app = monitor.app   
 
-def start_background():
-    import threading
-    import asyncio
+# -------- Shared Background System (for Flask AND Gunicorn) --------
 
-    def runner():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(monitor._receiver_loop())
-        loop.close()
+async def unified_async_runner():
+    # Start TopicActivityMonitorMulti
+    await monitor.monitor.connect()
 
-    threading.Thread(target=runner, daemon=True).start()
+    # Start OutputLayerReceiver loop
+    await monitor._receiver_loop()
 
-start_background()
 
-# --- STANDALONE MODE ---
+def start_background_async():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.create_task(unified_async_runner())
+    loop.run_forever()
+
+
+# Always start background async system when the module is imported
+threading.Thread(target=start_background_async, daemon=True).start()
+
+# -------- Standalone Flask Mode --------
 if __name__ == "__main__":
-    # Start Flask dev server
-    monitor.start(flask_port=5000)
+    monitor.app.run(host="0.0.0.0", port=5000)
