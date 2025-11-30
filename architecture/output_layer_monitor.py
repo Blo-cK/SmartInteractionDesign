@@ -658,10 +658,15 @@ app = monitor.app   # Flask instance exposed for Gunicorn
 
 def start_background():
     import threading
-    threading.Thread(
-        target=lambda: asyncio.run(monitor._receiver_loop()),
-        daemon=True
-    ).start()
+    import asyncio
+
+    def runner():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(monitor._receiver_loop())
+        loop.close()
+
+    threading.Thread(target=runner, daemon=True).start()
 
 start_background()
 
