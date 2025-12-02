@@ -33,9 +33,6 @@ class OutputLayerMonitor:
         self.app = Flask(__name__)
         self._setup_routes()
 
-    def _start_monitor_loop(self):
-        asyncio.set_event_loop(self.monitor_loop)
-        self.monitor_loop.run_forever()
     # --------------------------------------------------
     # Flask Routes
     # --------------------------------------------------
@@ -631,26 +628,12 @@ monitor = OutputLayerMonitor(
     service="object_detection"
 )
 
-app = monitor.app   
-
-import threading
-import asyncio
-RUN_BACKGROUND_THREADS = os.environ.get("RUN_BACKGROUND_THREADS", "1") == "1"
-
-if RUN_BACKGROUND_THREADS:
-    def start_background_async():
-        loop = asyncio.new_event_loop()
-
-        async def runner():
-            await monitor.monitor.connect()       # START INPUT MONITOR 
-            await monitor._receiver_loop()        # START OUTPUT RECEIVER 
-
-        loop.create_task(runner())
-        loop.run_forever()
-
-    threading.Thread(target=start_background_async, daemon=True).start()
+app = monitor.app
 
 
-# Standalone Flask mode
+# IMPORTANT: Flask/Gunicorn version does NOT start Kafka workers
+# Worker runs separately in output_layer_monitor_worker.py
+
 if __name__ == "__main__":
-    monitor.app.run(host="0.0.0.0", port=5000)
+    # Only used for local debugging
+    app.run(host="0.0.0.0", port=5000)
