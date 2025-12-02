@@ -10,6 +10,6 @@ services:
   monitor_worker:
     build: .
     container_name: monitor_worker
-    command: ["python", "architecture/output_layer_monitor_worker.py"]
+    entrypoint: ["sh", "-c", "echo START && ls -R /app && python3 /app/architecture/output_layer_monitor_worker.py"]
     depends_on:
       - monitor_api
