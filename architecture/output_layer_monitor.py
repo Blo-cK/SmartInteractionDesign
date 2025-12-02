@@ -10,7 +10,6 @@ from library.input_layer import TopicActivityMonitorMulti
 from library.output_layer import OutputLayerMetadata, OutputLayerReceiver
 
 
-_background_started = False
 
 class OutputLayerMonitor:
     """Runs a Kafka receiver in the background and exposes a Flask dashboard UI."""
@@ -636,10 +635,9 @@ app = monitor.app
 
 import threading
 import asyncio
+RUN_BACKGROUND_THREADS = os.environ.get("RUN_BACKGROUND_THREADS", "1") == "1"
 
-if not globals().get("_background_started", False):
-    globals()["_background_started"] = True
-
+if RUN_BACKGROUND_THREADS:
     def start_background_async():
         loop = asyncio.new_event_loop()
 

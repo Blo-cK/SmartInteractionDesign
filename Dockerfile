@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY . /app
 ENV PYTHONPATH="/app/architecture:${PYTHONPATH}"
+ENV RUN_BACKGROUND_THREADS=0
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
