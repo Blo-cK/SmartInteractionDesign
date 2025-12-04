@@ -1,0 +1,15 @@
+feature_extractor: Wav2Vec2FeatureExtractor
+full_name: padmalcom/wav2vec2-large-emotion-detection-german
+labels:
+  0: anger
+  1: boredom
+  2: disgust
+  3: fear
+  4: happiness
+  5: sadness
+  6: neutral
+model: Wav2Vec2ForSequenceClassification
+sampling_rate: 16000
+shape:
+- 1
+- 320000

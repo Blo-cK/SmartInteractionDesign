@@ -1,0 +1,7 @@
+numpy
+opencv-python
+aiokafka
+nats-py
+flask
+gunicorn
+gevent
