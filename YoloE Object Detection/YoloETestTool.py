@@ -39,8 +39,8 @@ def get_color_name(hsv, saturation_avg):
         return "rosa"
 
 
-def get_dominant_color(image, box):
-    """Berechnet die dominante Farbe in einer Bounding Box"""
+def get_dominant_color(image, box, mask=None):
+    """Berechnet die dominante Farbe innerhalb der Segmentierungsmaske einer Bounding Box."""
     try:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
 
@@ -61,12 +61,24 @@ def get_dominant_color(image, box):
         # ROI zu HSV konvertieren
         roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
+        # Pixel für die Analyse auswählen
+        if mask is not None:
+            # Maske auf ROI-Größe zuschneiden
+            mask_roi = mask[y1:y2, x1:x2]
+            # Nur Pixel innerhalb der Maske für die Analyse verwenden
+            pixels_to_analyze = roi_hsv[mask_roi > 0.5]
+        else:
+            # Fallback: Alle Pixel in der Bounding Box verwenden
+            pixels_to_analyze = roi_hsv.reshape(-1, 3)
 
-        # Durchschnittliche Sättigung im gesamten Bereich berechnen
-        saturation_avg = roi_hsv[:, :, 1].mean()
+        if pixels_to_analyze.size == 0:
+            return "unbekannt"
+
+        # Durchschnittliche Sättigung im relevanten Bereich berechnen
+        saturation_avg = pixels_to_analyze[:, 1].mean()
 
         # Median-Farbe berechnen (robuster als Durchschnitt)
-        median_color_hsv = np.median(roi_hsv.reshape(-1, 3), axis=0)
+        median_color_hsv = np.median(pixels_to_analyze, axis=0)
 
         # Farbnamen ermitteln
         color_name = get_color_name(median_color_hsv, saturation_avg)
@@ -126,16 +138,31 @@ while True:
     # Frame annotieren mit Farberkennung
     annotated_frame = frame.copy()
 
+    # Masken vorbereiten (falls vorhanden)
+    masks = None
+    if results[0].masks is not None:
+        masks = results[0].masks.data.cpu().numpy()
+        # Masken auf Bildgröße skalieren für die Visualisierung
+        scaled_masks = []
+        for mask in masks:
+            scaled_masks.append(cv2.resize(mask, (frame.shape[1], frame.shape[0])))
+        masks = scaled_masks
+
     # Für jede Erkennung
-    for box in results[0].boxes:
+    for i, box in enumerate(results[0].boxes):
         # Bounding Box Koordinaten
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         conf = float(box.conf[0])
         cls = int(box.cls[0])
         class_name = results[0].names[cls]
 
+        # Zugehörige Maske holen
+        current_mask = None
+        if masks is not None and i < len(masks):
+            current_mask = masks[i]
+
         # Farbe des Objekts ermitteln
-        color_name = get_dominant_color(frame, box)
+        color_name = get_dominant_color(frame, box, mask=current_mask)
 
         # Bounding Box zeichnen
         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
@@ -152,17 +179,12 @@ while True:
         cv2.putText(annotated_frame, label, (x1 + 5, y1 - 5),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
 
-    # Segmentierungsmasken hinzufügen (falls vorhanden)
-    if results[0].masks is not None:
-        masks = results[0].masks.data.cpu().numpy()
-        for i, mask in enumerate(masks):
-            # Maske auf Bildgröße skalieren
-            mask_resized = cv2.resize(mask, (frame.shape[1], frame.shape[0]))
-            # Farbige Überlagerung
-            color_mask = np.zeros_like(frame)
-            color_mask[:, :] = (0, 255, 255)  # Gelb
-            annotated_frame = np.where(mask_resized[..., None] > 0.5,
-                                      cv2.addWeighted(annotated_frame, 0.7, color_mask, 0.3, 0),
+        # Segmentierungsmaske visualisieren
+        if current_mask is not None:
+            color_mask_vis = np.zeros_like(frame)
+            color_mask_vis[:, :] = (0, 255, 255)  # Gelb für die Visualisierung
+            annotated_frame = np.where(current_mask[..., None] > 0.5,
+                                      cv2.addWeighted(annotated_frame, 0.7, color_mask_vis, 0.3, 0),
                                       annotated_frame)
 
     # Modus-Anzeige
