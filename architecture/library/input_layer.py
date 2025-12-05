@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass, asdict
-import asyncio
+from asyncio import Queue
 import threading
 import time
 import nats
@@ -9,6 +9,8 @@ from typing import Callable, Literal, Optional
 import cv2
 import threading
 import logging
+
+from .audio_grabber import AudioGrabber
 
 from .frame_grabber import FrameGrabber
 
@@ -61,8 +63,19 @@ class InputLayerProducer:
             print(f"Error sending message: {e}")
     
     #TODO: Implement sending Audio Chunks
-    async def send_audio_chunk():
-        return
+    async def send_audio_chunk(self, audio_grabber:AudioGrabber, sample_rate=16000, channels=1,fps=30):
+        if not self._connected:
+            await self.connect()
+
+        audio_bytes = audio_grabber.read_chunk()
+        metadata = {
+            "encoding": "pcm16",
+            "sample_rate": str(sample_rate),
+            "channels": str(channels)
+        }
+
+        await self._send_message(audio_bytes, metadata=metadata)
+        await asyncio.sleep(1.0/fps)
     
     async def send_frame(self, frame_grabber:FrameGrabber, fps=30):
         """Capture a frame from FrameGrabber and send to NATS"""
@@ -193,6 +206,8 @@ class InputLayerConsumerThread:
         # Optional user callback
         self.user_callback: Optional[Callable[[np.ndarray], None]] = None
         self.callback_thread: Optional[threading.Thread] = None
+        
+        self.shared_aduio_queue = Queue()
 
     async def connect(self):
         if self._connected:
@@ -241,6 +256,31 @@ class InputLayerConsumerThread:
         while self.running:
             await asyncio.sleep(0.01)
 
+    
+    async def consume_audio(self):
+    
+        if not self._connected or not self.consumer:
+            await self.connect()
+
+        async def audio_message_handler(msg):
+            with self.frame_lock:
+                self.latest_msg = msg  # store the latest audio message
+
+            # Call user callback in separate thread 
+            if self.user_callback:
+                try:
+                    threading.Thread(target=self.user_callback, args=(msg,self.shared_aduio_queue,None), daemon=True).start()
+                except Exception as e:
+                    print("[Audio Callback] Error in user callback:", e)
+
+        # Subscribe to the audio topic
+        self.subscription = await self.consumer.subscribe(self.topic, cb=audio_message_handler)
+        print(f"[Consumer] Subscribed to audio topic '{self.topic}'")
+
+        # Keep coroutine alive while running
+        while self.running:
+            await asyncio.sleep(0.01)
+    
     def _display_loop(self):
         print("[Display] Thread started.")
         while self.running:
@@ -284,6 +324,29 @@ class InputLayerConsumerThread:
 
         print("[Callback] Thread exiting.")
 
+    def _callback_loop_audio_queue(self):
+        """Continuously calls the user callback with the latest frame."""
+        print("[Callback] Thread started.")
+        while self.running:
+            msg = None
+            with self.frame_lock:
+                if self.latest_msg is not None:
+                    msg = self.latest_msg
+                    self.shared_aduio_queue.put_nowait(msg)
+                    
+
+            if msg is not None and self.user_callback:
+                try:
+                    self.user_callback(msg)
+                except Exception as e:
+                    print("[Callback] Error in user callback:", e)
+
+            # small sleep to prevent tight loop
+            time_wait = 0.001
+            threading.Event().wait(time_wait)
+
+        print("[Callback] Thread exiting.")
+    
     async def disconnect(self):
         self.running = False
         if self.consumer and self._connected:

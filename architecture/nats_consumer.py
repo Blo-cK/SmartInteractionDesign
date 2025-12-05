@@ -3,6 +3,9 @@ import asyncio
 import cv2
 import numpy as np
 
+
+import sounddevice as sd
+
 from library.input_layer import InputLayerConsumerThread
 
 
@@ -11,8 +14,9 @@ async def main():
     
     broker = "152.53.32.66:4222"
     topic = "cams.cam1"
+    audio_topic = "audio-stream"
     
-    consumer = InputLayerConsumerThread(topic=topic, broker=broker)
+    consumer = InputLayerConsumerThread(topic=audio_topic, broker=broker)
 
     def handle_frame(msg, frames):
         
@@ -26,15 +30,34 @@ async def main():
         print("Headers:", msg.headers)
         data = np.frombuffer(msg.data, np.uint8)
         
+        
         frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
         # Now frame is a numpy array you can feed to your model
         cv2.imshow(msg.subject, frame)
         cv2.waitKey(1)
+        
+    def handle_audio(msg, frame, a):
+        print("Headers:", msg.headers)
+        print("queue", frame)
+        # Convert byte data to int16 numpy array
+        audio = np.frombuffer(msg.data, dtype=np.int16)
+        
+        # Set sample rate (adjust if your audio stream uses a different rate)
+        sample_rate = 16000
+        
+        # Play audio (non-blocking)
+        sd.play(audio, samplerate=sample_rate)
+        sd.wait()
+        
+        # Optional: block until this chunk finishes playing
+        # sd.wait()
 
-    consumer.on_message(handle_frame)
+        print(f"Audio played: {len(audio)} samples")
+        
+    consumer.on_message(handle_audio)
     await consumer.connect()
-    await consumer.consume_video()
-
+    #await consumer.consume_video()
+    await consumer.consume_audio()
     await asyncio.Future()  # keep running
 
 asyncio.run(main())
