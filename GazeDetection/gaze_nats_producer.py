@@ -28,7 +28,7 @@ class FaceFrameGrabber:
         return buffer.tobytes()
 
 
-async def run_producer(num_frames=10):
+async def run_producer(num_frames=-1):
     producer = InputLayerProducer(
         topic="gaze.frames",
         source_name="camera1",
@@ -102,7 +102,10 @@ async def run_producer(num_frames=10):
     
     extractor.reset_directories()
     
-    print(f"🎥 Capturing {num_frames} frames (send immediately after extraction)...")
+    if num_frames == -1:
+        print("🎥 Capturing continuously (infinite mode)...")
+    else:
+        print(f"🎥 Capturing {num_frames} frames (send immediately after extraction)...")
     extractor.start_capture(camera_index=0)
     
     while extractor.is_running:
@@ -114,4 +117,4 @@ async def run_producer(num_frames=10):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_producer(10))
+    asyncio.run(run_producer(-1))  # -1 = infinite mode

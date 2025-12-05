@@ -310,7 +310,8 @@ class WebcamFaceExtractor:
                     
                     self.frame_counter += 1
                     # If we've reached the configured max frames, stop gracefully
-                    if self.frame_counter >= self.max_frames:
+                    # (skip check if max_frames is -1 for infinite capture)
+                    if self.max_frames > 0 and self.frame_counter >= self.max_frames:
                         print("⏭️ Reached max frames: "
                               f"{self.frame_counter}/{self.max_frames}."
                               " Stopping capture.")

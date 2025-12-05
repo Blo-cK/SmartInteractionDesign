@@ -75,17 +75,15 @@ async def run_consumer():
     # Use InputLayerConsumer.consume() as per README
     await consumer.consume(onFrame=handle_message)
     
-    # Wait for all messages
-    await asyncio.sleep(30)
-    
+    # Keep running indefinitely
     try:
+        while True:
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        print(f"\n🛑 Stopping consumer... Processed {count[0]} faces")
         await consumer.disconnect()
         await kafka.disconnect()
-    except Exception:
-        pass
-    
-    print(f"✅ Done! Processed {count[0]} faces")
 
 
 if __name__ == "__main__":
-    asyncio.run(run_consumer(10))
+    asyncio.run(run_consumer())

@@ -66,7 +66,7 @@ class GazeDetector:
 
 
 class L2CSModel(nn.Module):
-    """Simplified L2CS model implementation"""
+    """Simplified L2CS model implementation for faster results"""
     
     def __init__(self):
         super(L2CSModel, self).__init__()
