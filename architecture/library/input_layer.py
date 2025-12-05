@@ -8,6 +8,7 @@ import numpy as np
 from typing import Callable, Literal, Optional
 import cv2
 import threading
+import logging
 
 from .frame_grabber import FrameGrabber
 
@@ -92,6 +93,10 @@ class InputLayerProducer:
             self._connected= False
 
 
+class InputResultWrapper():
+
+    def __init__(self, msg):
+        self.msg = msg
 
 
 
@@ -112,18 +117,27 @@ class InputLayerConsumer:
             print(f"Connected to NATS topic '{self.topic}'")
         except Exception as e:
             print("Error happened: ",e)
-        
+
+    """ @staticmethod
+    def wrap_callback(cb):
+        async def wrapper(msg):
+            wrapped = InputResultWrapper(msg)
+            await cb(wrapped)
+        return wrapper   """  
+    
+
     async def consume(self, onFrame: Callable):
         if not self._connected and self.consumer:
-            await self.connect()
+            await self.connect()   
             
         async def message_handler(msg):
             try:
                 if onFrame:
-                    await onFrame(msg) # Callback every Gruppe can write their own Callback fucntion so we have decoupled the functionality
+                    await onFrame(InputResultWrapper(msg)) # Callback every Gruppe can write their own Callback fucntion so we have decoupled the functionality
             except Exception as e:
-                print("Error while consuming", e)    
+                logging.exception("Error while consuming")    
                 
+        
         self.subscription = await self.consumer.subscribe(self.topic, cb=message_handler)
     
     async def consume_video(self):
@@ -281,3 +295,72 @@ class InputLayerConsumerThread:
         else:
             print("[Consumer] No active connection to disconnect.")
  
+import time
+import asyncio
+import nats
+import logging
+from typing import Dict
+
+
+class TopicActivityMonitorMulti:
+    """
+    Tracks which services (source_id) have sent messages into a NATS topic.
+    """
+
+    def __init__(self, topic: str = "*", broker: str = "152.53.32.66:4222", window_seconds: int = 10):
+        self.topic = topic
+        self.broker = broker
+        self.window = window_seconds
+
+        self._connected = False
+        self.nc = None
+        self.subscription = None
+
+        # { source_id: last_timestamp }
+        self.service_activity: Dict[str, float] = {}
+
+    async def connect(self):
+        if self._connected:
+            return
+
+        try:
+            self.nc = await nats.connect(f"nats://{self.broker}")
+            self._connected = self.nc.is_connected
+            print(f"[Monitor] Connected to '{self.topic}'")
+
+            async def handler(msg):
+            
+                headers = msg.headers or {}
+                source_id = headers.get("source_id")
+
+                if source_id:
+                    self.service_activity[source_id] = time.time()
+
+            self.subscription = await self.nc.subscribe(self.topic, cb=handler)
+
+        except Exception as e:
+            logging.exception("[Monitor] Connection error")
+            raise e
+
+    def get_status(self):
+        """
+        Returns a dict with info who is active.
+        """
+        now = time.time()
+        result = {}
+
+        for service_id, ts in self.service_activity.items():
+            is_online = (now - ts) <= self.window
+            result[service_id] = {
+                "last_seen": ts,
+                "online": is_online
+            }
+
+        return result
+
+    async def disconnect(self):
+        if self.nc and self._connected:
+            await self.subscription.unsubscribe()
+            await self.nc.close()
+            self._connected = False
+            print("[Monitor] Disconnected.")
