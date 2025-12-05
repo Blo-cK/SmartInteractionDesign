@@ -5,3 +5,4 @@ nats-py
 flask
 gunicorn
 gevent
+sounddevice

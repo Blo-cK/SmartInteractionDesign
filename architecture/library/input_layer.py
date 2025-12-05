@@ -9,6 +9,7 @@ from typing import Callable, Literal, Optional
 import cv2
 import threading
 import logging
+import sounddevice as sd
 
 from .audio_grabber import AudioGrabber
 
@@ -208,6 +209,7 @@ class InputLayerConsumerThread:
         self.callback_thread: Optional[threading.Thread] = None
         
         self.shared_aduio_queue = Queue()
+        self.audio_thread = None
 
     async def connect(self):
         if self._connected:
@@ -266,17 +268,18 @@ class InputLayerConsumerThread:
             with self.frame_lock:
                 self.latest_msg = msg  # store the latest audio message
 
-            # Call user callback in separate thread 
-            if self.user_callback:
-                try:
-                    threading.Thread(target=self.user_callback, args=(msg,self.shared_aduio_queue,None), daemon=True).start()
-                except Exception as e:
-                    print("[Audio Callback] Error in user callback:", e)
-
         # Subscribe to the audio topic
         self.subscription = await self.consumer.subscribe(self.topic, cb=audio_message_handler)
         print(f"[Consumer] Subscribed to audio topic '{self.topic}'")
 
+        if self.user_callback:
+            self.callback_thread = threading.Thread(target=self._callback_loop_audio_queue , daemon=True)
+            self.callback_thread.start()
+
+        if self.audio_thread is None:
+            self.audio_thread = threading.Thread(target=self._audio_playback_loop, daemon=True)
+            self.audio_thread.start()
+        
         # Keep coroutine alive while running
         while self.running:
             await asyncio.sleep(0.01)
@@ -346,6 +349,34 @@ class InputLayerConsumerThread:
             threading.Event().wait(time_wait)
 
         print("[Callback] Thread exiting.")
+
+    def _audio_playback_loop(self):
+
+        samplerate = 16000
+        channels = 1
+
+        stream = sd.OutputStream(samplerate=samplerate, channels=channels, dtype='int16')
+        stream.start()
+
+        print("[Audio] Playback thread started")
+
+        while self.running:
+            try:
+                # Blocks until the next audio chunk arrives
+                msg = self.shared_aduio_queue.get(timeout=0.1)
+
+                pcm = np.frombuffer(msg.data, dtype=np.int16)
+                stream.write(pcm)
+
+            except self.shared_aduio_queue.Empty:
+                # No audio available → stream silence
+                stream.write(np.zeros(1600, dtype=np.int16))  # 0.1 sec silence
+                continue
+
+        stream.stop()
+        stream.close()
+        print("[Audio] Playback thread stopped")
+
     
     async def disconnect(self):
         self.running = False
