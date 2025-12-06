@@ -1,15 +1,9 @@
 version: "3.9"
 
 services:
-  monitor_api:
+  monitor:
     build: .
-    container_name: monitor_api
+    container_name: monitor
     ports:
       - "5000:5000"
-
-  monitor_worker:
-    build: .
-    container_name: monitor_worker
-    entrypoint: ["sh", "-c", "echo START && ls -R /app && python3 /app/architecture/output_layer_monitor_worker.py"]
-    depends_on:
-      - monitor_api
+    restart: always
