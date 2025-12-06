@@ -4,7 +4,6 @@ import numpy as np
 
 class AudioGrabber:
     """
-    Simple audio grabber similar to FrameGrabber.
     Captures PCM16 audio chunks at a fixed sample rate and chunk size.
     """
 
@@ -12,12 +11,12 @@ class AudioGrabber:
         self.sample_rate = sample_rate
         self.channels = channels
         self.chunk_ms = chunk_ms
-        self.frames_per_chunk = int((chunk_ms / 1000.0) * sample_rate)
+        self.sample_per_chunk = int((chunk_ms / 1000.0) * sample_rate)
 
         self.stream = sd.InputStream(
             samplerate=sample_rate,
             channels=channels,
-            dtype='int16'
+            dtype='int16' #apparently most audio libs use int 16 for this idk why just pcm magic stuff
         )
         self.stream.start()
 
@@ -25,7 +24,7 @@ class AudioGrabber:
         """
         Reads a single chunk of raw PCM16 audio and returns it as bytes.
         """
-        data, overflowed = self.stream.read(self.frames_per_chunk)
+        data, overflowed = self.stream.read(self.sample_per_chunk)
         print("||| overflow paramtent",overflowed)
         return data.tobytes()
 

@@ -7,7 +7,7 @@ import numpy as np
 import sounddevice as sd
 
 from library.input_layer import InputLayerConsumerThread
-
+from library.input_layer import AudioPlayer
 
 
 async def main():
@@ -32,32 +32,35 @@ async def main():
         
         
         frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
-        # Now frame is a numpy array you can feed to your model
+        # Now frame is a numpy array you can feed to your model or share with other teams
         cv2.imshow(msg.subject, frame)
         cv2.waitKey(1)
         
-    def handle_audio(msg, frame, a):
+    def handle_audio(msg):
         print("Headers:", msg.headers)
-        print("queue", frame)
+        #print("queue item ", msg)
         # Convert byte data to int16 numpy array
-        audio = np.frombuffer(msg.data, dtype=np.int16)
-        
-        # Set sample rate (adjust if your audio stream uses a different rate)
-        sample_rate = 16000
+        # Set sample rate (adjust if your audio stream uses a different rate) deprecated dont use this ever again
+        #sample_rate = 16000
         
         # Play audio (non-blocking)
-        sd.play(audio, samplerate=sample_rate)
-        sd.wait()
+        #sd.play(audio, samplerate=sample_rate)
+        #sd.wait()
         
         # Optional: block until this chunk finishes playing
         # sd.wait()
-
-        print(f"Audio played: {len(audio)} samples")
         
     consumer.on_message(handle_audio)
     await consumer.connect()
     #await consumer.consume_video()
-    await consumer.consume_audio()
+    asyncio.create_task(consumer.consume_audio())
+    print(",hjvljhvljhvljhvljhvjlhgvljhv ")
+    player = AudioPlayer()
+    player.start(consumer.shared_aduio_queue)
+  
+    
+    
     await asyncio.Future()  # keep running
-
+    
+    
 asyncio.run(main())

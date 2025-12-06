@@ -16,14 +16,13 @@ async def main():
     grabber = AudioGrabber(
         sample_rate=16000,
         channels=1,
-        chunk_ms=100   # 100ms chunk = fps 10
+        chunk_ms=100  # 100ms chunk = fps 10
     )
 
     await producer.connect()
-    print("🎤 Audio producer connected — streaming... Press Ctrl+C to stop.")
+    print("Audio producer connected — streaming...")
 
     # Determine fps from chunk size so it matches perfectly
-    fps = int(1000 / grabber.chunk_ms)  # 100ms → 10 fps
 
     try:
         while True:
@@ -31,7 +30,7 @@ async def main():
                 audio_grabber=grabber,
                 sample_rate=grabber.sample_rate,
                 channels=grabber.channels,
-                fps=1
+                fps=grabber.chunk_ms
             )
 
     except KeyboardInterrupt:
