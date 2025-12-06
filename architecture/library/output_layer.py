@@ -62,7 +62,7 @@ class OutputLayerProducer:
 
     def _build_topic(self, metadata: OutputLayerMetadata) -> str:
         if metadata.source_id and metadata.service_id:
-            return f"output.{metadata.source_id}.{metadata.service_id}"
+            return f"output.{metadata.source_id}.{metadata.service_id}".lower()
         raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
 
     async def sendData(self, input_result : InputResultWrapper, result, service_id : str):
@@ -73,7 +73,7 @@ class OutputLayerProducer:
         try:
             metadata = self._map_header_to_output_layer_metadata(input_result.msg.headers, result, service_id)
             topic = self._build_topic(metadata)
-            
+            print("TOPIC SEND: ", topic)
             data = metadata.to_dict()
             await self.producer.send(topic, data)
             
@@ -174,15 +174,15 @@ class OutputLayerReceiver:
     async def receiveAllData(self, onData: Callable):
         """Consume data from all topics matching output.*.*"""
         pattern = r"output\..*\..*"
-
         if not self._connected:
             await self._connect_pattern(pattern)
-
+          
         try:
             async for msg in self.consumer:
                 
                 metadata_dict = msg.value
                 try:
+                  
                     metadata = OutputLayerMetadata(**metadata_dict)
                     if onData:
                         await onData(metadata)
@@ -191,7 +191,7 @@ class OutputLayerReceiver:
         finally:
             await self.consumer.stop()
             self._connected = False
-            print("[SmartInteraction] Disconnected OutputLayerReceiver (pattern mode)")
+            print("[SmartInteraction] Disconnected OutputLayerReceiver")
 
     async def disconnect(self):
         if self.consumer and self._connected:
