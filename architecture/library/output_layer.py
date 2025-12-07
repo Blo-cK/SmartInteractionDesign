@@ -65,6 +65,20 @@ class OutputLayerProducer:
             return f"output.{metadata.source_id}.{metadata.service_id}".lower()
         raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
 
+
+    async def sendDataWithMetadata(self, metadata:OutputLayerMetadata, result, service_id :str):
+
+        if not self._connected:
+            await self._connect()
+
+        try:
+            topic = self._build_topic(metadata)
+            data = metadata.to_dict()
+            await self.producer.send(topic, data)
+            
+        except Exception as e:
+            print(f"[SmartInteraction] Error sending data: {e}")
+
     async def sendData(self, input_result : InputResultWrapper, result, service_id : str):
         """Send serialized data to Kafka"""
         if not self._connected:
