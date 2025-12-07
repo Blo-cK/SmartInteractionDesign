@@ -10,7 +10,7 @@ from datetime import datetime
 import os, sys
 
 from library.frame_grabber import FrameGrabber
-from library.input_layer import InputLayerConsumer, InputLayerProducer, InputResultWrapper
+from library.input_layer import InputLayerConsumer, InputLayerConsumerThread, InputLayerProducer, InputResultWrapper
 from library.output_layer import OutputLayerProducer
 
 
@@ -50,7 +50,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
     This function will retrieve the Data (in this case frames) which were put in the NATS by the InputLayerProducer.
     A InputLayerConsumer is used to retrieve the data out of the NATS.
     """
-    consumer = InputLayerConsumer(topic=topic)
+    consumer = InputLayerConsumerThread(topic=topic)
 
     async def fake_processing(frame):
         """YOUR ML STUFF GOES HERE! - 0.01 TO SIMULATE PROCESSING - RETURN YOUR RESULT AS JSON OR DICT!"""
@@ -58,7 +58,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
 
         return {"status": "ok", "objects": ["car", "person"]}
 
-    async def handle_message(result: InputResultWrapper):
+    async def handle_message(result: InputResultWrapper, frame):
         """
         process of nats messages
         This method processes only data which comes as jpeg, if another format is send like mp3 this method needs to be adapted.
@@ -69,7 +69,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
         
         data = np.frombuffer(result.msg.data, np.uint8)
         frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
-
+        print(result)
         # Show frame
         if frame is not None:
             cv2.imshow("Async Consumer Stream", frame)
@@ -87,7 +87,8 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
 
 
     await consumer.connect()
-    await consumer.consume(onFrame=handle_message)
+    consumer.on_message(handle_message)
+    await consumer.consume_video()
 
 
 ######################################################################

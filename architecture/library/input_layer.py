@@ -274,7 +274,7 @@ class InputLayerConsumerThread:
 
             if frame is not None and self.user_callback:
                 try:
-                    self.user_callback(msg, frame)
+                    self.user_callback(InputResultWrapper(msg), frame)
                 except Exception as e:
                     print("[Callback] Error in user callback:", e)
 
