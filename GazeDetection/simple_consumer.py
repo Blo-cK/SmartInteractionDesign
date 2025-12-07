@@ -20,10 +20,14 @@ async def check_producer_online(service_id="camera1", monitor_url="http://152.53
         response = requests.get(f"{monitor_url}/api/services/input/monitor/{service_id}", timeout=5)
         if response.status_code == 200:
             data = response.json()
-            return data.get('online', False)
+            # API returns nested dict: {'service_id': {'online': True, 'last_seen': ...}}
+            service_data = data.get(service_id, {})
+            is_online = service_data.get('online', False)
+            return is_online
+        print(f"Monitor returned status code: {response.status_code}")
         return False
     except Exception as e:
-        print(f"Failed check producer status: {e}")
+        print(f"Failed to check producer status: {e}")
         return False
 
 
@@ -57,7 +61,7 @@ async def run_consumer():
         print("Face extractor producer is online")
     
     consumer = InputLayerConsumer(
-        topic="gaze.frames",
+        topic="input.faceextractor.frames",
         broker="152.53.32.66:4222"
     )
     
@@ -75,19 +79,24 @@ async def run_consumer():
     
     async def handle_message(msg):
         # msg is InputResultWrapper, actual NATS message is in msg.msg
-        face_data = msg.msg.data
-        meta = msg.msg.headers or {}
+        json_data = msg.msg.data
         
-        # Decode face image
-        face_array = np.frombuffer(face_data, dtype=np.uint8)
+        # Parse JSON data package
+        import base64
+        data_package = json.loads(json_data.decode('utf-8'))
+        
+        # Extract face image from base64
+        face_bytes = base64.b64decode(data_package['face_image'])
+        face_array = np.frombuffer(face_bytes, dtype=np.uint8)
         face_img = cv2.imdecode(face_array, cv2.IMREAD_COLOR)
         
         if face_img is None:
             return
         
-        # Parse bbox and frame_size from metadata
-        bbox_info = json.loads(meta.get('bbox', '{}'))
-        frame_size = json.loads(meta.get('frame_size', '{}'))
+        # Extract metadata from data package
+        bbox_info = data_package.get('bbox', {})
+        frame_size = data_package.get('frame_size', {})
+        face_id = data_package.get('face_id', 'unknown')
         
         bbox = None
         if bbox_info:
@@ -102,7 +111,6 @@ async def run_consumer():
         gaze = gaze_detector.detect_gaze(face_img, bbox, w, h)
         
         # Send to Kafka
-        face_id = meta.get('face_id', 'unknown')
         result = {
             'face_id': face_id,
             'bbox': bbox_info,
@@ -110,10 +118,12 @@ async def run_consumer():
             'gaze': gaze
         }
         
-        await kafka.sendData(meta, result, 'gaze_detector')
+        await kafka.sendData(msg, result, 'gaze_detector')
         
+        # Get architecture metadata from headers
+        arch_meta = msg.msg.headers or {}
         print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}° → Kafka")
-        print(meta, result)
+        print(f"📋 Architecture metadata: {arch_meta}")
         count[0] += 1
     
     # Use InputLayerConsumer.consume() as per README
