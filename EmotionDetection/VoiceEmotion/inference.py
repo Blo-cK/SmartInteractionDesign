@@ -7,7 +7,7 @@ import sounddevice as sd
 import os
 from transformers import AutoConfig, Wav2Vec2Processor
 from Wav2Vec2ForSpeechClassification import Wav2Vec2ForSpeechClassification
-
+#https://github.com/padmalcom/wav2vec2-emotion-detection-ger
 MY_MODEL = "padmalcom/wav2vec2-large-emotion-detection-german"
 SAMPLE_RATE = 16000
 CHUNK_DURATION = 5.0  # seconds
@@ -36,18 +36,19 @@ def save_wav(filename: str, audio: np.ndarray):
 
 
 def predict(test, sampling_rate):
-	# speech = speech_file_to_array_fn(path, sampling_rate)
-	features = processor(test, sampling_rate=sampling_rate, return_tensors="pt", padding=True)
+    # Normalize audio input
+    test = test / np.max(np.abs(test))  # Normalize audio
+    features = processor(test, sampling_rate=sampling_rate, return_tensors="pt", padding=True)
 
-	input_values = features.input_values.to(device)
-	attention_mask = features.attention_mask.to(device)
+    input_values = features.input_values.to(device)
+    attention_mask = features.attention_mask.to(device)
 
-	with torch.no_grad():
-		logits = model(input_values, attention_mask=attention_mask).logits
+    with torch.no_grad():
+        logits = model(input_values, attention_mask=attention_mask).logits
 
-	scores = F.softmax(logits, dim=1).detach().cpu().numpy()[0]
-	outputs = [{"Emotion": config.id2label[i], "Score": f"{round(score * 100, 3):.1f}%"} for i, score in enumerate(scores)]
-	return outputs
+    scores = F.softmax(logits, dim=1).detach().cpu().numpy()[0]
+    outputs = [{"Emotion": config.id2label[i], "Score": f"{round(score * 100, 3):.1f}%"} for i, score in enumerate(scores)]
+    return outputs
 
 
 def audio_callback(indata, frames, time, status):
@@ -58,7 +59,9 @@ def audio_callback(indata, frames, time, status):
     os.makedirs("./temp", exist_ok=True)
     
     # Flatten to mono
-    audio = indata[:, 0].astype(np.float32)   
+    audio = indata[:, 0].astype(np.float32)
+    if len(audio) < SAMPLE_RATE * CHUNK_DURATION:  # Ensure audio is of expected length
+        return
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     wav_name = f"chunk_{timestamp}.wav"
     wav_path = f"./temp/{wav_name}"
