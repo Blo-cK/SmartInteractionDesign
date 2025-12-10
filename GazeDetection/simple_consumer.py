@@ -11,20 +11,17 @@ import requests
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from architecture.library.input_layer import InputLayerConsumer
 from architecture.library.output_layer import OutputLayerProducer
+from architecture.library.monitor_client import MonitorClient
 from gazedetection import GazeDetector
 
 
 async def check_producer_online(service_id="camera1", monitor_url="http://152.53.32.66:5000"):
-    """Check if face extractor producer service is online via REST API"""
+    """Check if face extractor producer service is online via MonitorClient"""
     try:
-        response = requests.get(f"{monitor_url}/api/services/input/monitor/{service_id}", timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            # API returns nested dict: {'service_id': {'online': True, 'last_seen': ...}}
-            service_data = data.get(service_id, {})
-            is_online = service_data.get('online', False)
-            return is_online
-        print(f"Monitor returned status code: {response.status_code}")
+        client = MonitorClient(base_url=monitor_url)
+        status = client.get_online_status(service_id)
+        if status:
+            return status.online
         return False
     except Exception as e:
         print(f"Failed to check producer status: {e}")
