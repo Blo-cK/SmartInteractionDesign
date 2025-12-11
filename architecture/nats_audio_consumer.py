@@ -14,7 +14,7 @@ async def main():
     
     broker = "152.53.32.66:4222"
     topic = "cams.cam1"
-    audio_topic = "audio-stream"
+    audio_topic = "input.audio-stream"
     
     consumer = InputLayerConsumerThread(topic=audio_topic, broker=broker)
 
