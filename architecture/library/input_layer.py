@@ -348,7 +348,7 @@ class TopicActivityMonitorMulti:
         """
         now = time.time()
         result = {}
-
+      
         for service_id, ts in self.service_activity.items():
             is_online = (now - ts) <= self.window
             result[service_id] = {

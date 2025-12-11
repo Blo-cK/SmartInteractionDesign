@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-k", "gthread", "-w", "1", "--bind", "0.0.0.0:5000", "architecture.output_layer_monitor:app"]
+CMD ["python3", "-u", "/app/architecture/output_layer_monitor.py"]

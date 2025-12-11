@@ -5,16 +5,60 @@ import numpy as np
 import sys
 import os
 import json
+import subprocess
+import requests
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from architecture.library.input_layer import InputLayerConsumer
 from architecture.library.output_layer import OutputLayerProducer
+from architecture.library.monitor_client import MonitorClient
 from gazedetection import GazeDetector
 
 
+async def check_producer_online(service_id="camera1", monitor_url="http://152.53.32.66:5000"):
+    """Check if face extractor producer service is online via MonitorClient"""
+    try:
+        client = MonitorClient(base_url=monitor_url)
+        status = client.get_online_status(service_id)
+        if status:
+            return status.online
+        return False
+    except Exception as e:
+        print(f"Failed to check producer status: {e}")
+        return False
+
+
+async def start_producer():
+    """Start the producer as a subprocess"""
+    print("Starting face producer")
+    producer_path = os.path.join(os.path.dirname(__file__), "gaze_nats_producer.py")
+    conda_env = "emotionsdetektion_elena_ryumina"
+    
+    # Start producer as background process
+    subprocess.Popen(
+        [
+            "C:/anaconda3/Scripts/conda.exe", "run", "-n", conda_env,
+            "--no-capture-output", "python", producer_path
+        ],
+        cwd=os.path.dirname(__file__),
+        creationflags=subprocess.CREATE_NEW_CONSOLE
+    )
+    print("Face extractor Producer started in new console")
+    await asyncio.sleep(10)  # Wait for producer to initialize
+
+
 async def run_consumer():
+    print("🔍 Checking if face extractor producer is online")
+    is_online = await check_producer_online("camera1")
+    
+    if not is_online:
+        print("Face extractor producer is not online -> starting it")
+        await start_producer()
+    else:
+        print("Face extractor producer is online")
+    
     consumer = InputLayerConsumer(
-        topic="gaze.frames",
+        topic="input.faceextractor.frames",
         broker="152.53.32.66:4222"
     )
     
@@ -31,19 +75,25 @@ async def run_consumer():
     count = [0]
     
     async def handle_message(msg):
-        face_data = msg.data
-        meta = msg.headers or {}
+        # msg is InputResultWrapper, actual NATS message is in msg.msg
+        json_data = msg.msg.data
         
-        # Decode face image
-        face_array = np.frombuffer(face_data, dtype=np.uint8)
+        # Parse JSON data package
+        import base64
+        data_package = json.loads(json_data.decode('utf-8'))
+        
+        # Extract face image from base64
+        face_bytes = base64.b64decode(data_package['face_image'])
+        face_array = np.frombuffer(face_bytes, dtype=np.uint8)
         face_img = cv2.imdecode(face_array, cv2.IMREAD_COLOR)
         
         if face_img is None:
             return
         
-        # Parse bbox and frame_size from metadata
-        bbox_info = json.loads(meta.get('bbox', '{}'))
-        frame_size = json.loads(meta.get('frame_size', '{}'))
+        # Extract metadata from data package
+        bbox_info = data_package.get('bbox', {})
+        frame_size = data_package.get('frame_size', {})
+        face_id = data_package.get('face_id', 'unknown')
         
         bbox = None
         if bbox_info:
@@ -58,7 +108,6 @@ async def run_consumer():
         gaze = gaze_detector.detect_gaze(face_img, bbox, w, h)
         
         # Send to Kafka
-        face_id = meta.get('face_id', 'unknown')
         result = {
             'face_id': face_id,
             'bbox': bbox_info,
@@ -66,26 +115,26 @@ async def run_consumer():
             'gaze': gaze
         }
         
-        await kafka.sendData(meta, result, 'gaze_detector')
+        await kafka.sendData(msg, result, 'gaze_detector')
         
+        # Get architecture metadata from headers
+        arch_meta = msg.msg.headers or {}
         print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}° → Kafka")
-        print(meta, result)
+        print(f"📋 Architecture metadata: {arch_meta}")
         count[0] += 1
     
     # Use InputLayerConsumer.consume() as per README
     await consumer.consume(onFrame=handle_message)
     
-    # Wait for all messages
-    await asyncio.sleep(30)
-    
+    # Keep running indefinitely
     try:
+        while True:
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        print(f"\n🛑 Stopping consumer... Processed {count[0]} faces")
         await consumer.disconnect()
         await kafka.disconnect()
-    except Exception:
-        pass
-    
-    print(f"✅ Done! Processed {count[0]} faces")
 
 
 if __name__ == "__main__":
-    asyncio.run(run_consumer(10))
+    asyncio.run(run_consumer())

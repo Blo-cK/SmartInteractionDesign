@@ -64,7 +64,7 @@ class OutputLayerMonitor:
         @self.app.route("/api/messages")
         def get_messages():
             result = []
-
+            print("SIZEEE:", len(self.service_buffers))
             for service, buf in self.service_buffers.items():
                 for entry in list(buf):
                     entry_copy = dict(entry)
@@ -114,15 +114,15 @@ class OutputLayerMonitor:
 
         # save in ringbuffer
         self.service_buffers[service].append(data)
-
         # persist to disk
         file_path = os.path.join(self.storage_dir, f"{service}.jsonl")
         with open(file_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(data) + "\n")
 
-
     async def _receiver_loop(self):
+        print("initializing receiver")
         receiver = OutputLayerReceiver(broker=self.broker, group_id=None)
+
         try:
             await receiver.receiveAllData(self._msg_callback)
         finally:
@@ -288,7 +288,7 @@ class OutputLayerMonitor:
     </style>
 
     <h1>REST API Übersicht</h1>
-    <p>Hier findest du eine kurze Beschreibung aller verfügbaren REST-Endpunkte des Monitors.</p>
+    <p>Hier ist eine kurze Beschreibung aller verfügbaren REST-Endpunkte des Monitors.</p>
 
 
     <h2>Live Status aller Input-Services</h2>
@@ -443,6 +443,27 @@ class OutputLayerMonitor:
     </html>
     """
 
+
+    def start_background_tasks(self):
+
+
+        def run_receiver():
+            asyncio.run(self._receiver_loop())
+
+        threading.Thread(target=run_receiver, daemon=True).start()
+
+
+        
+        def run_monitor():
+            async def run():
+                await self.monitor.connect()
+
+                while True:
+                    await asyncio.sleep(0.1)
+
+            asyncio.run(run())
+
+        threading.Thread(target=run_monitor, daemon=True).start()
 
 
     def _dashboard_html(self):
@@ -629,11 +650,8 @@ monitor = OutputLayerMonitor(
 )
 
 app = monitor.app
-
-
-# IMPORTANT: Flask/Gunicorn version does NOT start Kafka workers
-# Worker runs separately in output_layer_monitor_worker.py
-
+monitor.start_background_tasks()
 if __name__ == "__main__":
     # Only used for local debugging
+    
     app.run(host="0.0.0.0", port=5000)

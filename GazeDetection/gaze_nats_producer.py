@@ -10,27 +10,45 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from architecture.library.input_layer import (
     InputLayerProducer, InputLayerMetadataVideo
 )
+from architecture.library.frame_grabber import FrameGrabber
 from face_extractor import WebcamFaceExtractor
 
 
-class FaceFrameGrabber:
-    """Adapter to provide face images with metadata"""
-    def __init__(self, face_img, bbox_info, face_id):
-        self.face_img = face_img
-        self.bbox_info = bbox_info
-        self.face_id = face_id
-        h, w = face_img.shape[:2]
-        self.width = w
-        self.height = h
-        
-    def read_frame(self):
-        _, buffer = cv2.imencode('.jpg', self.face_img)
-        return buffer.tobytes()
+async def send_face_with_data(producer, face_img, bbox_info, face_id, frame_size):
+    """Send face image with metadata in data block (JSON format)"""
+    
+    # Encode face image to JPEG
+    _, buffer = cv2.imencode('.jpg', face_img, [cv2.IMWRITE_JPEG_QUALITY, 80])
+    face_bytes = buffer.tobytes()
+    
+    # Create data package with image and metadata
+    import base64
+    data_package = {
+        'face_image': base64.b64encode(face_bytes).decode('utf-8'),
+        'face_id': face_id,
+        'bbox': bbox_info,
+        'frame_size': frame_size
+    }
+    
+    # Convert to JSON bytes
+    json_bytes = json.dumps(data_package).encode('utf-8')
+    
+    # Send using standard InputLayerProducer (architecture handles metadata)
+    h, w = face_img.shape[:2]
+    metadata = InputLayerMetadataVideo(
+        time_stamp=int(time.time()),
+        source_id=producer.id,
+        encoding='json',
+        width=w,
+        height=h
+    ).as_dict()
+    
+    await producer._send_message(json_bytes, metadata)
 
 
-async def run_producer(num_frames=10):
+async def run_producer(num_frames=-1):
     producer = InputLayerProducer(
-        topic="gaze.frames",
+        topic="input.faceextractor.frames",
         source_name="camera1",
         broker="152.53.32.66:4222"
     )
@@ -55,29 +73,11 @@ async def run_producer(num_frames=10):
         
         bbox_info = file_metadata.get('bbox', {})
         frame_size = file_metadata.get('frame_size', {})
-        h, w = face_img.shape[:2]
         
-        # Encode face
-        frame_bytes = cv2.imencode('.jpg', face_img)[1].tobytes()
-        
-        # Create metadata
-        metadata = InputLayerMetadataVideo(
-            time_stamp=int(time.time()),
-            source_id='camera1',
-            encoding='jpeg',
-            width=w,
-            height=h
-        ).as_dict()
-        
-        # Add custom fields
-        metadata['face_id'] = face_id
-        metadata['bbox'] = json.dumps(bbox_info)
-        metadata['frame_size'] = json.dumps(frame_size)
-        
-        # Schedule async send
+        # Schedule async send with data in JSON format
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(producer._send_message(frame_bytes, metadata))
+        loop.run_until_complete(send_face_with_data(producer, face_img, bbox_info, face_id, frame_size))
         loop.close()
         
         sent[0] += 1
@@ -102,7 +102,10 @@ async def run_producer(num_frames=10):
     
     extractor.reset_directories()
     
-    print(f"🎥 Capturing {num_frames} frames (send immediately after extraction)...")
+    if num_frames == -1:
+        print("🎥 Capturing continuously (infinite mode)...")
+    else:
+        print(f"🎥 Capturing {num_frames} frames (send immediately after extraction)...")
     extractor.start_capture(camera_index=0)
     
     while extractor.is_running:
@@ -114,4 +117,4 @@ async def run_producer(num_frames=10):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_producer(10))
+    asyncio.run(run_producer(-1))  # -1 = infinite mode

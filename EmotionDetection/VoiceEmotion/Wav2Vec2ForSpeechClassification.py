@@ -52,9 +52,12 @@ class Wav2Vec2ForSpeechClassification(Wav2Vec2PreTrainedModel):
 		hidden_states = outputs[0]
 		hidden_states = torch.mean(hidden_states, dim=1)
 		logits = self.classifier(hidden_states)
-		labels = self.config.label2id
-		loss_fct = CrossEntropyLoss()
-		loss = loss_fct(logits.view(-1, self.num_labels), (len(labels)-1)*torch.ones(logits.size(0), dtype=torch.long).to(logits.device))
+		logits = torch.softmax(logits, dim=1)  # Apply softmax to logits
+		
+		loss = None
+		if labels is not None:
+			loss_fct = CrossEntropyLoss()
+			loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
 				
 		if not return_dict:
 			output = (logits,) + outputs[2:]
