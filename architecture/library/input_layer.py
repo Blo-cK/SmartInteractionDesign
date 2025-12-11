@@ -13,9 +13,15 @@ import threading
 import logging
 import sounddevice as sd
 
+from enum import Enum
+
 from .frame_grabber import FrameGrabber
 from .audio_grabber import AudioGrabber
 
+class SampleFormat(str, Enum):
+    PCM16 = "pcm16"
+    FLOAT32 = "float32"
+    OPUS = "opus"
 @dataclass
 class BaseInputMetadata(ABC):
     time_stamp:str
@@ -33,7 +39,18 @@ class InputLayerMetadataVideo(BaseInputMetadata):
 class InputLayerMetadataSound(BaseInputMetadata):
     sample_rate: int
     channels: int
-    sample_format: Literal["pcm16", "float32", "opus"]
+    sample_format: SampleFormat
+    chunk_ms: int
+    def as_dict(self):
+        result = {}
+        for k, v in asdict(self).items():
+            if isinstance(v, Enum):
+                result[k] = v.value
+            else:
+                result[k] = v
+        return result
+
+
 
 class InputLayerProducer:
     def __init__(self, topic:str, source_name:str, broker:str = "152.53.32.66:4222"):
@@ -65,8 +82,23 @@ class InputLayerProducer:
             print(f"Error sending message: {e}")
     
     #TODO: Implement sending Audio Chunks
-    async def send_audio_chunk():
-        return
+    async def send_audio_chunk(self, fps, audio_grabber:AudioGrabber, sample_rate=16000, channels=1):
+        if not self._connected:
+            await self.connect()
+
+        audio_bytes = audio_grabber.read_chunk()
+        metadata = InputLayerMetadataSound(
+            time_stamp=str(time.time()),
+            source_id=str(self.id),
+            encoding= "int16",
+            sample_rate= str(sample_rate),
+            channels= str(channels),
+            sample_format= SampleFormat.PCM16,
+            chunk_ms= str(fps)
+        ).as_dict()
+
+        await self._send_message(audio_bytes, metadata=metadata)
+        await asyncio.sleep(1.0/fps)
     
     async def send_frame(self, frame_grabber:FrameGrabber, fps=30):
         """Capture a frame from FrameGrabber and send to NATS"""
@@ -95,6 +127,7 @@ class InputLayerProducer:
         
         if self.producer.is_closed:
             self._connected= False
+
 
 
 class InputResultWrapper():
