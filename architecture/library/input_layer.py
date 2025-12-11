@@ -1,6 +1,8 @@
 from abc import ABC
 from dataclasses import dataclass, asdict
 import asyncio
+import queue
+from queue import Queue
 import threading
 import time
 import nats
@@ -9,8 +11,10 @@ from typing import Callable, Literal, Optional
 import cv2
 import threading
 import logging
+import sounddevice as sd
 
 from .frame_grabber import FrameGrabber
+from .audio_grabber import AudioGrabber
 
 @dataclass
 class BaseInputMetadata(ABC):
@@ -176,6 +180,7 @@ class InputLayerConsumerThread:
     Async NATS consumer that hands off frames to lightweight background threads.
     - A display thread shows the newest frame (minimal latency)
     - An optional user callback thread processes each newest frame
+    - The same behaviour is applied to the audio threads
     """
 
     def __init__(self, topic:str, broker:str= "152.53.32.66:4222"):
@@ -193,6 +198,9 @@ class InputLayerConsumerThread:
         # Optional user callback
         self.user_callback: Optional[Callable[[np.ndarray], None]] = None
         self.callback_thread: Optional[threading.Thread] = None
+        
+        self.shared_aduio_queue = Queue()
+        self.callback_queue = Queue()
 
     async def connect(self):
         if self._connected:
@@ -239,8 +247,32 @@ class InputLayerConsumerThread:
         print("[Consumer] Started zero-delay display & callback threads.")
         # Keep coroutine alive
         while self.running:
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
 
+    
+    async def consume_audio(self):
+    
+        if not self._connected or not self.consumer:
+            await self.connect()
+
+        async def audio_message_handler(msg):
+            with self.frame_lock:
+                self.shared_aduio_queue.put_nowait(msg)  # store the latest audio message
+                self.callback_queue.put_nowait(msg)
+                self.latest_msg = msg
+
+        # Subscribe to the audio topic
+        self.subscription = await self.consumer.subscribe(self.topic, cb=audio_message_handler)
+        print(f"[Consumer] Subscribed to audio topic '{self.topic}'")
+
+        if self.user_callback:
+            self.callback_thread = threading.Thread(target=self._callback_loop_audio_queue, args=(), daemon=True)
+            self.callback_thread.start()
+
+        # Keep coroutine alive while running
+        while self.running:
+            await asyncio.sleep(0.01)
+    
     def _display_loop(self):
         print("[Display] Thread started.")
         while self.running:
@@ -284,6 +316,33 @@ class InputLayerConsumerThread:
 
         print("[Callback] Thread exiting.")
 
+    def _callback_loop_audio_queue(self):
+        """Continuously calls the user callback with the latest audio chunk."""
+        print("[Callback] Thread started.")
+        time_wait = None
+        while self.running:
+            try:
+                msg = self.callback_queue.get_nowait()
+                time_wait = 1.0 / int(msg.headers["chunk_ms"])
+                print("dasd",time_wait)
+                print("queue was read")
+            except queue.Empty:
+                msg = None
+                print("queue was empty")
+
+            if msg is not None and self.user_callback:
+                try:
+                    self.user_callback(msg)
+                    print("USER CALLBACK WAS USED")
+                except Exception as e:
+                    print("[Callback] Error in user callback:", e)
+            if time_wait is not None:
+                threading.Event().wait(time_wait)
+            else:
+                threading.Event().wait(0.01)
+
+        print("[Callback] Thread exiting.")
+    
     async def disconnect(self):
         self.running = False
         if self.consumer and self._connected:
@@ -294,6 +353,7 @@ class InputLayerConsumerThread:
             print("[Consumer] Disconnected cleanly.")
         else:
             print("[Consumer] No active connection to disconnect.")
+
  
 import time
 import asyncio
@@ -364,3 +424,46 @@ class TopicActivityMonitorMulti:
             await self.nc.close()
             self._connected = False
             print("[Monitor] Disconnected.")
+
+
+class AudioPlayer:
+    def __init__(self, samplerate=16000, channels=1, dtype="int16"):
+        self.samplerate = samplerate
+        self.channels = channels
+        self.dtype = dtype
+        self.running = False
+        self.thread = None
+
+    def start(self, queue):
+        """Start audio playback from an external queue."""
+        self.queue = queue
+        self.running = True
+        self.thread = threading.Thread(target=self._loop, daemon=True)
+        self.thread.start()
+
+    def stop(self):
+        self.running = False
+
+    def _loop(self):
+        import sounddevice as sd
+
+        stream = sd.OutputStream(
+            samplerate=self.samplerate,
+            channels=self.channels,
+            dtype=self.dtype
+        )
+        stream.start()
+
+        silence = np.zeros(int(self.samplerate * 0.05), dtype=self.dtype)
+
+        while self.running:
+            try:
+                msg = self.queue.get(timeout=0.05)
+                pcm = np.frombuffer(msg.data, dtype=self.dtype)
+                stream.write(pcm)
+
+            except queue.Empty:
+                stream.write(silence)
+
+        stream.stop()
+        stream.close()
