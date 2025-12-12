@@ -7,7 +7,7 @@ from library.input_layer import InputLayerProducer
 
 async def main():
     broker = "152.53.32.66:4222"
-    topic = "input.audio-stream"
+    topic = "audio.stream1"
     myid = str(uuid.uuid4())
     # Create producer
     producer = InputLayerProducer(broker=broker, topic=topic,source_name=myid)

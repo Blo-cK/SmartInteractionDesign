@@ -9,10 +9,10 @@ from library.input_layer import InputLayerProducer
 
 
 async def main():
-    
+    "You dont need to specify the Broker its automatically handeled for you"
     broker = "152.53.32.66:4222"
-    topic = "cams.cam1"
-    myid = str(uuid.uuid4())
+    topic = "cams.cam1" # pls use the same structure and Prefix your cam with cams. and then add your cam1 , 2,3,4...
+    myid = str(uuid.uuid4()) #use this for save id selection or specify your own beware of collisions
     
     
     producer = InputLayerProducer(broker=broker,topic=topic,source_name=myid )
