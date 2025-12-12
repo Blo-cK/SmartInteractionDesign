@@ -320,9 +320,13 @@ class InputLayerConsumerThread:
 
         print("[Consumer] Started zero-delay display & callback threads.")
         # Keep coroutine alive
-        while self.running:
-            await asyncio.sleep(0.01)
+        #while self.running:
+        #    await asyncio.sleep(0.01)
 
+        if not hasattr(self, "_background_task") or self._background_task.done():
+            self._background_task = asyncio.create_task(self._run_forever())
+        
+        return
     
     async def consume_audio(self, play_audio:bool = False):
         """
@@ -349,8 +353,13 @@ class InputLayerConsumerThread:
             self.audio_player = AudioPlayer()
             self.audio_player.start(queue=self.shared_aduio_queue)
         # Keep coroutine alive while running
-        while self.running:
-            await asyncio.sleep(0.01)
+        #while self.running:
+        #    await asyncio.sleep(0.01)
+        
+        if not hasattr(self, "_background_task") or self._background_task.done():
+            self._background_task = asyncio.create_task(self._run_forever())
+
+        return
     
     def _display_loop(self):
         """
@@ -434,6 +443,12 @@ class InputLayerConsumerThread:
             print("[Consumer] Disconnected cleanly.")
         else:
             print("[Consumer] No active connection to disconnect.")
+    
+    async def _run_forever(self):
+        """Internal background task to keep the event loop alive."""
+        while self.running:
+            await asyncio.sleep(0.01)
+
 
  
 import time
