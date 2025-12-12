@@ -347,11 +347,12 @@ class InputLayerConsumerThread:
             self.audio_player.start(queue=self.shared_aduio_queue)
         # Keep coroutine alive while running
         while self.running:
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
     
     def _display_loop(self):
         """
         This is the Display Loop that is offloaded into a seperate Thread
+        TODO: This could be seperated into its own VideoPlayer Class like i did with the AudioPlayer
         """
         print("[Display] Thread started.")
         while self.running:
