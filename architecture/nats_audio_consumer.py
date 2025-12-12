@@ -19,11 +19,14 @@ async def main():
         
     def handle_audio(msg: InputResultWrapper):
         """this is the user defined callback"""
+        ##############################
+        #   YOUR CODE GOES HERE
+        ##############################
         print("Headers:", msg.headers)
         
     consumer.on_message(handle_audio)
-    await consumer.connect()
-    await consumer.consume_audio(play_audio=True)
+    await consumer.connect() # you dont need to connect manually its done automatically but its a option if you need to or want to for style reasons
+    await consumer.consume_audio(play_audio=True) 
   
     await asyncio.Future()  # keep running
     

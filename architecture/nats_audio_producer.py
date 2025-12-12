@@ -25,20 +25,20 @@ async def main():
     producer = InputLayerProducer(broker=broker, topic=topic,source_name=myid)
 
     # Create audio grabber
+    
     grabber = AudioGrabber(
         sample_rate=16000,
         channels=1,
-        chunk_ms=100  # 100ms chunk = fps 10
+        chunk_ms=100  # 100ms chunk = fps 10 this is also the parameter used to determine the Cps for Audio (Chunks per second)
+        # Determine fps from chunk size so it matches perfectly
     )
 
-    await producer.connect()
+    await producer.connect() # you dont need to explicitly connect but its available if needed
     print("Audio producer connected — streaming...")
-
-    # Determine fps from chunk size so it matches perfectly
 
     try:
         while True:
-            await producer.send_audio_chunk(audio_grabber=grabber)
+            await producer.send_audio_chunk(audio_grabber=grabber) #send_audio_chunk will automatically connect you 
     except KeyboardInterrupt:
         print("Stopping audio stream...")
     finally:

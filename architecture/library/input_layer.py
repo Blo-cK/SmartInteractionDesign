@@ -321,7 +321,7 @@ class InputLayerConsumerThread:
         print("[Consumer] Started zero-delay display & callback threads.")
         # Keep coroutine alive
         while self.running:
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.01)
 
     
     async def consume_audio(self, play_audio:bool = False):
@@ -350,7 +350,7 @@ class InputLayerConsumerThread:
             self.audio_player.start(queue=self.shared_aduio_queue)
         # Keep coroutine alive while running
         while self.running:
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.01)
     
     def _display_loop(self):
         """
@@ -394,7 +394,7 @@ class InputLayerConsumerThread:
                     print("[Callback] Error in user callback:", e)
 
             # small sleep to prevent tight loop
-            time_wait = 0.001
+            time_wait = 0.01
             threading.Event().wait(time_wait)
 
         print("[Callback] Thread exiting.")
