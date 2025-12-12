@@ -18,14 +18,22 @@ from enum import Enum
 from .frame_grabber import FrameGrabber
 from .audio_grabber import AudioGrabber
 
+class InvalidMetadataError(Exception):
+    """Is being thrown if Metadata is missing or corrupt."""
+    pass
 class SampleFormat(str, Enum):
     PCM16 = "pcm16"
     FLOAT32 = "float32"
     OPUS = "opus"
 @dataclass
 class BaseInputMetadata(ABC):
+    """
+    source_id = The sensor, for example camera1, microphone1...
+    service_id = The service which processed the data e.g. Gaze Detection etc.
+    """
     time_stamp:str
     source_id:str
+    service_id: str
     encoding:str
     def as_dict(self):
         return {k: str(v) for k, v in asdict(self).items()}
@@ -53,17 +61,19 @@ class InputLayerMetadataSound(BaseInputMetadata):
 
 
 class InputLayerProducer:
-    def __init__(self, topic:str, source_name:str, broker:str = "152.53.32.66:4222"):
+    def __init__(self, source_name:str, service:str, broker:str = "152.53.32.66:4222"):
         self.broker = broker
-        self.topic = self.build_topic_name(topic)
+        self.topic = self.build_topic_name(source_name, service)
         self._connected= False
         self.producer = None
         self.id= source_name
+        self.source_id = source_name
+        self.service_id = service
     
-    def build_topic_name(self, topic: str) -> str:
-        if not topic.startswith("input."):
-            return f"input.{topic}"
-        return topic
+    def build_topic_name(self,source_id:str, service_id:str) -> str:
+        if source_id and service_id:
+            return f"input.{source_id}.{service_id}".lower()
+        raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
     
     async def connect(self):
         """
@@ -106,7 +116,8 @@ class InputLayerProducer:
         audio_bytes = audio_grabber.read_chunk()
         metadata = InputLayerMetadataSound(
             time_stamp=str(time.time()),
-            source_id=str(self.id),
+            source_id=str(self.source_id),
+            service_id= str(self.service_id),
             encoding= "int16",
             sample_rate= sample_rate_str,
             channels= channels_str,
@@ -125,7 +136,8 @@ class InputLayerProducer:
         if frame_bytes:
             metadata = InputLayerMetadataVideo(
                 time_stamp=int(time.time()),
-                source_id=self.id,
+                source_id=str(self.source_id),
+                service_id= str(self.service_id),
                 encoding="jpeg",
                 width=frame_grabber.width,
                 height=frame_grabber.height
@@ -238,9 +250,11 @@ class InputLayerConsumerThread:
     - The same behaviour is applied to the audio threads
     """
 
-    def __init__(self, topic:str, broker:str= "152.53.32.66:4222"):
+    def __init__(self, source_name:str, service:str, broker:str= "152.53.32.66:4222"):
         self.broker = broker
-        self.topic = self.build_topic_name(topic)
+        self.source_id = source_name
+        self.service_id = service
+        self.topic = self.build_topic_name(self.source_id, self.service_id)
         self._connected = False
         self.consumer = None
         self.subscription = None
@@ -262,11 +276,10 @@ class InputLayerConsumerThread:
         self.audio_player = None
         self.audio_thread = None
         
-    def build_topic_name(self, topic: str) -> str:
-        "builds the Topic prefix 'Input.' for the Monitor to recognize the messages "
-        if not topic.startswith("input."):
-            return f"input.{topic}"
-        return topic
+    def build_topic_name(self,source_id:str, service_id:str) -> str:
+        if source_id and service_id:
+            return f"input.{source_id}.{service_id}".lower()
+        raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
     
     async def connect(self):
         """

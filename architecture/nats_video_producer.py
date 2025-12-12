@@ -11,15 +11,15 @@ from library.input_layer import InputLayerProducer
 async def main():
     "You dont need to specify the Broker its automatically handeled for you"
     broker = "152.53.32.66:4222"
-    topic = "cams.cam1" # pls use the same structure and Prefix your cam with cams. and then add your cam1 , 2,3,4...
-    myid = str(uuid.uuid4()) #use this for save id selection or specify your own beware of collisions
+    source_name= "stream1"
+    service_id = "example_serviceL"
     
     """ 
     Here we add the Producer and the FrameGrabber
     The Grabber is pulling the Video Frames from your webcam 
     It simulates the Agents Cameras with your own hardware
     """
-    producer = InputLayerProducer(broker=broker,topic=topic,source_name=myid )
+    producer = InputLayerProducer(broker=broker,source_name = source_name, service= service_id )
     grabber = FrameGrabber(device=0, width=1920, height=1080, jpeg_quality=40)
     
     await producer.connect() # you dont need to explicitly connect but its available if needed

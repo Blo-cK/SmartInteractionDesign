@@ -10,8 +10,8 @@ async def main():
     "You dont need to specify the Broker its automatically handeled for you"
     broker = "152.53.32.66:4222"
     
-    topic = "audio.stream1" # pls use the same structure and Prefix your stream with audio. and then add your stream1 , 2,3,4...
-    myid = str(uuid.uuid4()) # use this for save id selection or specify your own beware of collisions
+    source_name= "stream1"
+    service_id = "example_serviceL"
     
     """ 
     Here we add the Producer and the AudioGrabber
@@ -22,7 +22,7 @@ async def main():
     
     Linux Users: Make sure your Audio Port and Drivers are up to date or this will fail
     """
-    producer = InputLayerProducer(broker=broker, topic=topic,source_name=myid)
+    producer = InputLayerProducer(broker=broker, source_name = source_name, service= service_id)
 
     # Create audio grabber
     

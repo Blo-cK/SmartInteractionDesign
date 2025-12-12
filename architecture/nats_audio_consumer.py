@@ -13,9 +13,10 @@ from library.input_layer import InputResultWrapper
 async def main():
     
     broker = "152.53.32.66:4222"
-    audio_topic = "audio.stream1"
+    source_name= "stream1"
+    service_id = "example_serviceL"
     
-    consumer = InputLayerConsumerThread(topic=audio_topic, broker=broker)
+    consumer = InputLayerConsumerThread(source_name = source_name, service= service_id, broker=broker)
         
     def handle_audio(msg: InputResultWrapper):
         """this is the user defined callback"""

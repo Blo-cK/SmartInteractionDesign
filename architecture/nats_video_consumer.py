@@ -11,10 +11,11 @@ async def main():
     "You dont need to specify the Broker its automatically handeled for you"
     broker = "152.53.32.66:4222"
     
-    topic = "cams.cam1" # set your topic to listen to cams.cam____
+    source_name= "stream1"
+    service_id = "example_serviceL"
     
     """ Here we set the Consumer"""
-    consumer = InputLayerConsumerThread(topic=topic, broker=broker)
+    consumer = InputLayerConsumerThread(source_name = source_name, service= service_id, broker=broker)
 
     """"
     This is the user defind Callback 
