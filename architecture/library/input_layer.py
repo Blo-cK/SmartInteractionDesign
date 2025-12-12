@@ -242,7 +242,8 @@ class InputLayerConsumerThread:
         self.consumer = None
         self.subscription = None
         
-        #frame section
+        
+        #Frame Section
         self.latest_frame = None
         self.latest_msg = None
         self.frame_lock = threading.Lock()
@@ -252,10 +253,12 @@ class InputLayerConsumerThread:
         self.user_callback: Optional[Callable[[np.ndarray], None]] = None
         self.callback_thread: Optional[threading.Thread] = None
         
-        #shared Queue for audio chunks
+        #Audio Section
         self.shared_aduio_queue = Queue()
         self.callback_queue = Queue()
-
+        self.audio_player = None
+        self.audio_thread = None
+        
     def build_topic_name(self, topic: str) -> str:
         "builds the Topic prefix 'Input.' for the Monitor to recognize the messages "
         if not topic.startswith("input."):
@@ -282,7 +285,7 @@ class InputLayerConsumerThread:
         """
         self.user_callback = callback
 
-    async def consume_video(self, videoPlayer = False):
+    async def consume_video(self, play_video = False):
         """
         Consumes video and sets the Dispaly and callback
         """
@@ -303,7 +306,7 @@ class InputLayerConsumerThread:
 
         
         # Start display thread
-        if videoPlayer:
+        if play_video:
             display_thread = threading.Thread(target=self._display_loop, daemon=True)
             display_thread.start()
 
@@ -318,7 +321,7 @@ class InputLayerConsumerThread:
             await asyncio.sleep(0.001)
 
     
-    async def consume_audio(self):
+    async def consume_audio(self, play_audio:bool = False):
         """
         Consumes the Audio Chunks and sets the Callback
         """
@@ -339,6 +342,9 @@ class InputLayerConsumerThread:
             self.callback_thread = threading.Thread(target=self._callback_loop_audio_queue, args=(), daemon=True)
             self.callback_thread.start()
 
+        if play_audio and self.audio_player is None:
+            self.audio_player = AudioPlayer()
+            self.audio_player.start(queue=self.shared_aduio_queue)
         # Keep coroutine alive while running
         while self.running:
             await asyncio.sleep(0.01)

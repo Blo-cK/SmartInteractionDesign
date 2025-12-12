@@ -22,9 +22,11 @@ async def main():
         
     consumer.on_message(handle_audio)
     await consumer.connect()
-    asyncio.create_task(consumer.consume_audio())
-    player = AudioPlayer()
-    player.start(consumer.shared_aduio_queue)
+    #asyncio.create_task(consumer.consume_audio())
+    await consumer.consume_audio(play_audio=True)
+    
+    #player = AudioPlayer()
+    #player.start(consumer.shared_aduio_queue)
   
     await asyncio.Future()  # keep running
     
