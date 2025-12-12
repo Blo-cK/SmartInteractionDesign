@@ -60,7 +60,7 @@ class InputLayerProducer:
         self.producer = None
         self.id= source_name
     
-    def build_topic_name(topic: str) -> str:
+    def build_topic_name(self, topic: str) -> str:
         if not topic.startswith("input."):
             return f"input.{topic}"
         return topic
@@ -167,7 +167,7 @@ class InputLayerConsumer:
         self.consumer= None
         self.subscription = None
     
-    def build_topic_name(topic: str) -> str:
+    def build_topic_name(self, topic: str) -> str:
         if not topic.startswith("input."):
             return f"input.{topic}"
         return topic
@@ -256,7 +256,7 @@ class InputLayerConsumerThread:
         self.shared_aduio_queue = Queue()
         self.callback_queue = Queue()
 
-    def build_topic_name(topic: str) -> str:
+    def build_topic_name(self, topic: str) -> str:
         "builds the Topic prefix 'Input.' for the Monitor to recognize the messages "
         if not topic.startswith("input."):
             return f"input.{topic}"
