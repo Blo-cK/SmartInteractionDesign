@@ -27,8 +27,8 @@ async def main():
     """Here we add the loop that triggers the send for Grabbed Frames"""
     try:
         while True:
-            # Capture a frame and send to NATS
-            await producer.send_frame(grabber,100) #send_frame will automatically connect you 
+            # Capture a frame and send to NATS with 30 fps you can change fps based on your network and hardware
+            await producer.send_frame(grabber,30) #send_frame will automatically connect you
     except KeyboardInterrupt:
         print("Stopping video stream...")
     finally:

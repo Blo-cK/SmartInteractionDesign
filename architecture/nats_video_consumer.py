@@ -38,20 +38,12 @@ async def main():
         #   YOUR CODE GOES HERE
         ##############################
         """ 
-        In this example i display the video
-        You do what you want with the data form this point on
         Video Display is a feature already built in to the Producer you dont have to implememt it if you need it just use the "play_video" Prop in the consume_video
         """
-        data = np.frombuffer(msg.data, np.uint8)
-        
-        frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
-        # Now frame is a numpy array you can feed to your model
-        cv2.imshow(msg.subject, frame)
-        cv2.waitKey(1)
 
     consumer.on_message(handle_frame)
     await consumer.connect() # you dont need to connect manually its done automatically but its a option if you need to or want to for style reasons
-    await consumer.consume_video(play_video=False)
+    await consumer.consume_video(play_video=True)
 
     await asyncio.Future()  # keep running this is needed bc the script would end here  
     # the api will work as long as the main is running (so the consume will stop as soon as this terminates/returns) 
