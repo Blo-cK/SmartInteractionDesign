@@ -28,6 +28,9 @@ async def main():
     await consumer.connect() # you dont need to connect manually its done automatically but its a option if you need to or want to for style reasons
     await consumer.consume_audio(play_audio=True) 
     
-    await asyncio.Future()  # keep running
+    await asyncio.Future()  # keep running this is needed bc the script would end here  
+    # the api will work as long as the main is running (so the consume will stop as soon as this terminates/returns) 
+    # if you dont want this to happen then keep it running forever or put it in a coroutine or thread if needed
+    
     
 asyncio.run(main())
