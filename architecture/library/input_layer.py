@@ -93,26 +93,29 @@ class InputLayerProducer:
             print(f"Error sending message: {e}")
     
     #TODO: Implement sending Audio Chunks
-    async def send_audio_chunk(self, fps, audio_grabber:AudioGrabber, sample_rate=16000, channels=1):
+    async def send_audio_chunk(self, audio_grabber:AudioGrabber, sample_rate=16000, channels=1):
         """
         sends audio chunk to NATS using the _send_messages 
         """
         if not self._connected:
             await self.connect()
-
+        sample_rate_str = str(getattr(audio_grabber, "sample_rate", sample_rate) or sample_rate)
+        channels_str = str(getattr(audio_grabber, "channels", channels) or channels)
+        chunk_ms_str = str(getattr(audio_grabber, "chunk_ms", 100))  # default 100ms if missing
+        
         audio_bytes = audio_grabber.read_chunk()
         metadata = InputLayerMetadataSound(
             time_stamp=str(time.time()),
             source_id=str(self.id),
             encoding= "int16",
-            sample_rate= str(sample_rate),
-            channels= str(channels),
+            sample_rate= sample_rate_str,
+            channels= channels_str,
             sample_format= SampleFormat.PCM16,
-            chunk_ms= str(fps)
+            chunk_ms= chunk_ms_str,
         ).as_dict()
 
         await self._send_message(audio_bytes, metadata=metadata)
-        await asyncio.sleep(1.0/fps)
+        await asyncio.sleep(1.0/audio_grabber.chunk_ms)
     
     async def send_frame(self, frame_grabber:FrameGrabber, fps=30):
         """

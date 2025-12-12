@@ -6,7 +6,8 @@ import numpy as np
 import sounddevice as sd
 
 from library.input_layer import InputLayerConsumerThread
-from library.input_layer import AudioPlayer
+from library.input_layer import InputResultWrapper
+
 
 
 async def main():
@@ -16,13 +17,12 @@ async def main():
     
     consumer = InputLayerConsumerThread(topic=audio_topic, broker=broker)
         
-    def handle_audio(msg):
+    def handle_audio(msg: InputResultWrapper):
         """this is the user defined callback"""
         print("Headers:", msg.headers)
         
     consumer.on_message(handle_audio)
     await consumer.connect()
-    #asyncio.create_task(consumer.consume_audio())
     await consumer.consume_audio(play_audio=True)
   
     await asyncio.Future()  # keep running

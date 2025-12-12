@@ -6,10 +6,22 @@ from library.input_layer import InputLayerProducer
 
 
 async def main():
+    
+    "You dont need to specify the Broker its automatically handeled for you"
     broker = "152.53.32.66:4222"
-    topic = "audio.stream1"
-    myid = str(uuid.uuid4())
-    # Create producer
+    
+    topic = "audio.stream1" # pls use the same structure and Prefix your stream with audio. and then add your stream1 , 2,3,4...
+    myid = str(uuid.uuid4()) # use this for save id selection or specify your own beware of collisions
+    
+    """ 
+    Here we add the Producer and the AudioGrabber
+    The Grabber is pulling the Audio from your OS Audio Input Device 
+    It simulates the Agents Mic with your own hardware
+    
+    Windows Users: This will ask you to allow Audio Devices
+    
+    Linux Users: Make sure your Audio Port and Drivers are up to date or this will fail
+    """
     producer = InputLayerProducer(broker=broker, topic=topic,source_name=myid)
 
     # Create audio grabber
@@ -26,16 +38,9 @@ async def main():
 
     try:
         while True:
-            await producer.send_audio_chunk(
-                audio_grabber=grabber,
-                sample_rate=grabber.sample_rate,
-                channels=grabber.channels,
-                fps=grabber.chunk_ms
-            )
-
+            await producer.send_audio_chunk(audio_grabber=grabber)
     except KeyboardInterrupt:
         print("Stopping audio stream...")
-
     finally:
         grabber.release()
         await producer.disconnect()
