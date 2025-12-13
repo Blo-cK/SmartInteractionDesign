@@ -7,3 +7,4 @@ Dieses Repository ist für alle Gruppen gedacht. Jede Gruppe kann sich einen eig
 ### [YoloE Object Detection](YoloE%20Object%20Detection/)
 Echtzeit-Objekterkennung mit YOLO11 - enthält Tools für Webcam-basierte Detektion mit Prompted und Non-Prompted Modi.
 
+### [Architecture](./architecture/README.md/)
