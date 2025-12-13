@@ -1,3 +1,7 @@
+# Structure
+
+
+
 # Setup
 **Create a venv for Python:**
 ```
@@ -102,17 +106,34 @@ Kept for backwards compatibility but **no longer recommended**.
 The working example is located here: `.\architecture\`
 For Video look in the `nats_video_producer.py` and `nats_video_consumer.py`
 
+
+## Video Producer Example
 The following code is needed to send video
 ```
-    topic = "cams.cam1"
-    myid = str(uuid.uuid4())
+    source_name= "cam1"
+    service_id = "example_serviceL"
 
-    producer = InputLayerProducer(broker=broker,topic=topic,source_name=myid )
+    producer = InputLayerProducer(broker=broker,source_name = source_name, service= service_id )
     grabber = FrameGrabber(device=0, width=1920, height=1080, jpeg_quality=40)
 
-    await producer.send_frame(grabber,100)
+    await producer.send_frame(grabber,30)
 ```
-***The full explenation is in the working example***
+***The full explenation is in the working example for Producer***
+
+
+## Video Consumer Example
+
+The following code is needed to consume video
+```
+    source_name= "cam1"
+    service_id = "example_serviceL"
+    
+    consumer = InputLayerConsumerThread(source_name = source_name, service= service_id, broker=broker)
+    await consumer.consume_video(play_video=True)
+```
+***The full explenation is in the working example for Consumer***
+
+
 
 
 # Audio Streaming
@@ -121,27 +142,37 @@ The working example is located here: `.\architecture\`
 For Video look in the `nats_audio_producer.py` and `nats_audio_consumer.py`
 
 
+## Audio Producer Example
+
+Captures microphone audio and streams it to NATS:
+
 The following code is needed to send audio
 ```
-    topic = "audio.stream1"
-    myid = str(uuid.uuid4())
+    source_name= "stream1"
+    service_id = "example_serviceL"
 
-    producer = InputLayerProducer(broker=broker, topic=topic,source_name=myid)
+    producer = InputLayerProducer(broker=broker, source_name = source_name, service= service_id)
     grabber = AudioGrabber(sample_rate=16000, channels=1, chunk_ms=100)
 
-    await producer.send_frame(grabber,100)
+    await producer.send_audio_chunk(audio_grabber=grabber)
 ```
-***The full explenation is in the working example***
+***The full explenation is in the working example for Producer***
 
 * Windows Users: This will ask you to allow Audio Devices
     
 * Linux Users: Make sure your Audio Port and Drivers are up to date or this will fail
 
-## Audio Producer Example
+## Audio Consumer Example
 
-Captures microphone audio and streams it to NATS:
-
-
+The following code is needed to consume Audio
+```
+    source_name= "stream1"
+    service_id = "example_serviceL"
+    
+    consumer = InputLayerConsumerThread(source_name = source_name, service= service_id, broker=broker)
+    await consumer.consume_audio(play_audio=True)
+```
+***The full explenation is in the working example for Consumer***
 
 # Output Layer
 
@@ -149,7 +180,7 @@ The Output Layer handles:
 
 * Collecting results from processing services (AI, detection, analysis, etc.)
 * Mapping metadata from the Input Layer
-* Publishing results to Kafka  
+* Bundels Published results from Kafka  
 * Enabling dashboards or downstream services to consume data
 
 Example metadata:

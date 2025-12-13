@@ -11,7 +11,7 @@ async def main():
     "You dont need to specify the Broker its automatically handeled for you"
     broker = "152.53.32.66:4222"
     
-    source_name= "stream1"
+    source_name= "cam1"
     service_id = "example_serviceL"
     
     """ Here we set the Consumer"""
