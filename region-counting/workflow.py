@@ -1,4 +1,4 @@
-""" 
+"""
 This is an example workflow - from producing a video using a sensor (e.g your Camera) to processing it and sending
 the result to the output layer.
 """
@@ -9,9 +9,9 @@ import numpy as np
 from datetime import datetime
 import os, sys
 
-from library.frame_grabber import FrameGrabber
-from library.input_layer import InputLayerConsumer, InputLayerProducer, InputResultWrapper
-from library.output_layer import OutputLayerProducer
+from architecture.library.frame_grabber import FrameGrabber
+from architecture.library.input_layer import InputLayerConsumer, InputLayerProducer, InputResultWrapper
+from architecture.library.output_layer import OutputLayerProducer
 
 from ultralytics import solutions
 
@@ -80,7 +80,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
         to the Output Hub.
         """
         # JPEG -> numpy
-        
+
         data = np.frombuffer(result.msg.data, np.uint8)
         frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
@@ -99,7 +99,6 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
             service_id=service_name
         )
 
-
     await consumer.connect()
     await consumer.consume(onFrame=handle_message)
 
@@ -115,7 +114,7 @@ async def main():
 
     try:
         await asyncio.gather(
-            producer_task(topic, "Sensor1"),
+            producer_task(topic, "RegionCountingSensor"),
             consumer_task(topic, output_producer, service_name)
         )
     except KeyboardInterrupt:
