@@ -1,5 +1,4 @@
 
-
 #Mit base env (3.13.5) und ollama + qwen3-vl:4b installiert
 #Ollama starten
 
