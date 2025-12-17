@@ -1,0 +1,6 @@
+opencv-python
+nats-py
+requests
+ollama
+numpy
+nats-py
