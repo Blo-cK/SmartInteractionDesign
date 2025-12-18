@@ -27,13 +27,13 @@ class Config:
 
     # === Modell-Einstellungen ===
     MODEL_PATH = "yoloe-11s-seg.pt"  # Pfad zum YOLOE-Modell
-    CONFIDENCE_THRESHOLD = 0.35       # Minimale Konfidenz für Detektion (0.0-1.0)
+    CONFIDENCE_THRESHOLD = 0.15       # Minimale Konfidenz für Detektion (0.0-1.0)
 
     # === Tracking-Parameter ===
-    FRAMES_TO_CONFIRM = 5            # Frames bis Person als "erkannt" gilt
-    FRAMES_TO_LOSE = 30              # Frames ohne Detektion bis Person "verloren"
+    FRAMES_TO_CONFIRM = 20            # Frames bis Person als "erkannt" gilt
+    FRAMES_TO_LOSE = 100              # Frames ohne Detektion bis Person "verloren"
     POSITION_TOLERANCE = 150         # Pixel-Distanz für "gleiche Person"
-    MIN_BOX_SIZE = 50                # Minimale Bounding Box Größe (Breite/Höhe)
+    MIN_BOX_SIZE = 10                # Minimale Bounding Box Größe (Breite/Höhe)
 
     # === Export-Einstellungen ===
     EXPORT_DIR = "detections"        # Verzeichnis für Bild-Exports

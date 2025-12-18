@@ -10,8 +10,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from ollama import chat
-from typing import Dict, List, Optional
-import hashlib
+from typing import Dict, List, Optional, Tuple
 
 
 # ============================================================
@@ -23,11 +22,11 @@ class Config:
 
     # === Ollama-Einstellungen ===
     OLLAMA_MODEL = "qwen3-vl:4b"     # Ollama Vision Model
-    INSTRUCTION = """Beschreibe diese Person kurz::
+    INSTRUCTION = """Beschreibe diese Person kurz: 
 - Geschlecht und ungefähres Alter
 - Kleidung (Farben, Stil, Besonderheiten)
 - Auffällige Merkmale oder Accessoires.
-- Gehe auf Text auf Kleidung ein"""
+"""
 
     # === Ordner-Überwachung ===
     DETECTIONS_DIR = "detections"    # Ordner mit exportierten Bildern
@@ -83,7 +82,7 @@ class PersonDescriptionHandler:
         """Prüft ob Bild bereits verarbeitet wurde"""
         return image_path in self.processed_images
 
-    def save_description(self, image_path: str, description: str, metadata: Dict):
+    def save_description(self, image_path: str, description: str, metadata: Dict, processing_time: float = 0.0):
         """Speichert Beschreibung in JSONL und optional als .txt"""
         try:
             # Erstelle Beschreibungs-Eintrag
@@ -92,6 +91,7 @@ class PersonDescriptionHandler:
                 'description': description,
                 'timestamp': datetime.now().isoformat(),
                 'model': self.config.OLLAMA_MODEL,
+                'processing_time_seconds': round(processing_time, 2),
                 'metadata': metadata
             }
 
@@ -107,6 +107,7 @@ class PersonDescriptionHandler:
                     f.write(f"Beschreibung von {img_path.name}\n")
                     f.write(f"Erstellt: {entry['timestamp']}\n")
                     f.write(f"Modell: {self.config.OLLAMA_MODEL}\n")
+                    f.write(f"Verarbeitungszeit: {processing_time:.2f}s\n")
                     f.write("-" * 60 + "\n\n")
                     f.write(description)
 
@@ -131,7 +132,7 @@ class OllamaVisionHandler:
     def __init__(self, config: Config):
         self.config = config
 
-    def _resize_image(self, image) -> 'np.ndarray':
+    def _resize_image(self, image):
         """Skaliert Bild auf maximale Größe"""
         h, w = image.shape[:2]
         max_w, max_h = self.config.MAX_IMAGE_SIZE
@@ -146,14 +147,15 @@ class OllamaVisionHandler:
 
         return cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
 
-    def describe_image(self, image_path: Path) -> Optional[str]:
-        """Beschreibt ein Bild mit Ollama"""
+    def describe_image(self, image_path: Path) -> Tuple[Optional[str], float]:
+        """Beschreibt ein Bild mit Ollama. Gibt (Beschreibung, Verarbeitungszeit) zurück."""
+        start_time = time.time()
         try:
             # Lade Bild
             image = cv2.imread(str(image_path))
             if image is None:
                 print(f"⚠ Konnte Bild nicht laden: {image_path.name}")
-                return None
+                return None, 0.0
 
             # Skaliere Bild
             image = self._resize_image(image)
@@ -163,7 +165,8 @@ class OllamaVisionHandler:
                                   [int(cv2.IMWRITE_JPEG_QUALITY), self.config.JPEG_QUALITY])
             if not ok:
                 print(f"⚠ Fehler beim Kodieren: {image_path.name}")
-                return None
+                elapsed_time = time.time() - start_time
+                return None, elapsed_time
 
             img_bytes = jpg.tobytes()
 
@@ -191,7 +194,8 @@ class OllamaVisionHandler:
                     except:
                         description = resp.message.content
 
-                    return description.strip()
+                    elapsed_time = time.time() - start_time
+                    return description.strip(), elapsed_time
 
                 except Exception as e:
                     if attempt < self.config.MAX_RETRIES - 1:
@@ -216,14 +220,17 @@ class OllamaVisionHandler:
                             except:
                                 description = resp.message.content
 
-                            return description.strip()
+                            elapsed_time = time.time() - start_time
+                            return description.strip(), elapsed_time
                         except Exception as e2:
                             print(f"  ⚠ Alle Versuche fehlgeschlagen: {e2}")
-                            return None
+                            elapsed_time = time.time() - start_time
+                            return None, elapsed_time
 
         except Exception as e:
             print(f"⚠ Fehler bei Bildverarbeitung: {e}")
-            return None
+            elapsed_time = time.time() - start_time
+            return None, elapsed_time
 
 
 # ============================================================
@@ -290,21 +297,21 @@ class DetectionFolderMonitor:
             metadata = self._extract_metadata(image_path)
 
             # Beschreibe Bild mit Ollama
-            description = self.vision_handler.describe_image(image_path)
+            description, processing_time = self.vision_handler.describe_image(image_path)
 
             if description:
                 # Speichere Beschreibung
                 self.description_handler.save_description(
-                    str(image_path), description, metadata
+                    str(image_path), description, metadata, processing_time
                 )
 
                 if self.config.VERBOSE:
-                    print(f"✓ Beschreibung:")
+                    print(f"✓ Beschreibung (⏱️ {processing_time:.2f}s):")
                     # Zeige erste Zeile der Beschreibung
                     first_line = description.split('\n')[0][:80]
                     print(f"  {first_line}...")
             else:
-                print(f"✗ Konnte Bild nicht beschreiben")
+                print(f"✗ Konnte Bild nicht beschreiben (⏱️ {processing_time:.2f}s)")
 
             print()  # Leerzeile
 
