@@ -1,59 +1,66 @@
 import asyncio
+import time
+from datetime import datetime, timezone
 from typing import Optional
 
-from push_client import get_push_config, send_context_to_webhook
+from architecture.library.output_layer import OutputLayerProducer, OutputLayerMetadata
 from ContextProvider.app.service.context_service import build_snapshot
-from ContextProvider.app.model.context_models import LocationHint
 
 
-async def push_loop() -> None:
+# IDs used to build the Kafka topic:
+# topic = output.<source_id>.<service_id>  (all lowercased)
+# → "output.contextprovider.contextprovider"
+# Make sure this topic exists or is allowed to be auto-created.
+SOURCE_ID = "contextprovider"
+SERVICE_ID = "contextprovider"
+
+
+async def push_loop(interval_seconds: int = 60) -> None:
     """
     Background loop that periodically builds a context snapshot
-    and pushes it to an upstream message service.
+    and pushes it into the shared Kafka output layer.
 
-    The loop:
-    - reads configuration from environment (PUSH_* variables)
-    - builds a snapshot via build_snapshot(...)
-    - compares hashes to only push on changes
-    - sleeps for the configured interval
+    - Uses OutputLayerMetadata, which is what the architecture expects.
+    - Sends only when the context hash changes (to avoid spamming Kafka).
     """
-    cfg = get_push_config()
-
-    if not cfg["enabled"]:
-        # Push is disabled, exit silently
-        return
-
-    webhook_url = cfg["webhook_url"]
-    interval = cfg["interval_seconds"]
-
-    if not webhook_url:
-        # No target configured -> nothing to do
-        return
-
+    producer = OutputLayerProducer()
     last_hash: Optional[str] = None
-
-    # Optional: fixed location hint; you can change this to None or something dynamic if needed.
-    location_hint: Optional[LocationHint] = None
 
     while True:
         try:
-            # Build a fresh snapshot. You can change the default language if needed.
+            # 1) Build a fresh context snapshot (your existing logic)
             envelope = await build_snapshot(
-                accept_language="de-DE",
-                location_hint=location_hint,
+                accept_language="de-DE",  # you can make this configurable later
+                location_hint=None,
             )
 
-            # Only push if something has changed since the last push
+            # 2) Only push if context has changed
             if envelope.hash != last_hash:
-                payload = {
-                    "source": "context_provider",
-                    "payload": envelope.model_dump(),
-                }
-                await send_context_to_webhook(webhook_url, payload)
-                last_hash = envelope.hash
-        except Exception:
-            # In a real application you would log the exception.
-            # For now we just swallow it to keep the loop running.
-            pass
+                now_iso = datetime.now(timezone.utc).isoformat()
+                completed_at = int(time.time())
 
-        await asyncio.sleep(interval)
+                # Full envelope (snapshot) as the result payload
+                result_dict = envelope.model_dump()
+
+                metadata = OutputLayerMetadata(
+                    source_id=SOURCE_ID,
+                    service_id=SERVICE_ID,
+                    time_stamp=envelope.producedAt or now_iso,
+                    completed_at=completed_at,
+                    result=result_dict,
+                )
+
+                await producer.sendDataWithMetadata(
+                    metadata=metadata,
+                    result=result_dict,
+                    service_id=SERVICE_ID,
+                )
+
+                print(f"[ContextProvider] Pushed new context with hash {envelope.hash}")
+                last_hash = envelope.hash
+
+        except Exception as e:
+            # Do not crash the loop on errors; just log and retry later.
+            print(f"[ContextProvider] Error in push_loop: {e}")
+
+        await asyncio.sleep(interval_seconds)

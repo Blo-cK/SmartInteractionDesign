@@ -1,13 +1,13 @@
 from typing import Optional
 from fastapi import FastAPI, Header, Query
-from model.context_models import (
+from ContextProvider.app.model.context_models import (
     LocationHint,
     ContextInput,
     ContextEnvelope,
 )
-from service.context_service import build_snapshot, build_delta
+from ContextProvider.app.service.context_service import build_snapshot, build_delta
 import asyncio
-from push.push_loop import push_loop
+from ContextProvider.app.push.push_loop import push_loop
 
 app = FastAPI(
     title="context_provider",
