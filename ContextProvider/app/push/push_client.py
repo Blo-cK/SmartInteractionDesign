@@ -1,5 +1,4 @@
 import os
-import json
 from typing import TypedDict
 
 import httpx

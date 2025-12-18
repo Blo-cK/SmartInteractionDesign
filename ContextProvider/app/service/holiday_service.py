@@ -3,7 +3,7 @@ from typing import List
 
 import httpx
 
-from ContextProvider.model.context_models import Holiday
+from ContextProvider.app.model.context_models import Holiday
 
 NAGER_BASE_URL = "https://date.nager.at"
 

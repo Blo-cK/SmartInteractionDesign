@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typing import Optional
 from zoneinfo import ZoneInfo
-from ContextProvider.model.context_models import (
+from ContextProvider.app.model.context_models import (
     LocationHint,
     LocationResolved,
     DateTimeContext,
@@ -14,8 +14,8 @@ from ContextProvider.model.context_models import (
     Holiday,
     WeatherContext,
 )
-from ContextProvider.service.holiday_service import fetch_holidays
-from ContextProvider.service.weather_service import fetch_current_weather
+from ContextProvider.app.service.holiday_service import fetch_holidays
+from ContextProvider.app.service.weather_service import fetch_current_weather
 
 TIMEZONE = "Europe/Berlin"
 

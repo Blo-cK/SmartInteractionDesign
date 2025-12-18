@@ -3,7 +3,7 @@ from typing import Optional
 
 import httpx
 
-from ContextProvider.model.context_models import WeatherContext
+from ContextProvider.app.model.context_models import WeatherContext
 
 
 OPEN_METEO_BASE_URL = "https://api.open-meteo.com/v1"

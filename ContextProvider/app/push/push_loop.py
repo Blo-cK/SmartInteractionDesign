@@ -2,8 +2,8 @@ import asyncio
 from typing import Optional
 
 from push_client import get_push_config, send_context_to_webhook
-from ContextProvider.service.context_service import build_snapshot
-from ContextProvider.model.context_models import LocationHint
+from ContextProvider.app.service.context_service import build_snapshot
+from ContextProvider.app.model.context_models import LocationHint
 
 
 async def push_loop() -> None:
