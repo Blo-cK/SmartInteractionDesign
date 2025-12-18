@@ -18,14 +18,22 @@ from enum import Enum
 from .frame_grabber import FrameGrabber
 from .audio_grabber import AudioGrabber
 
+class InvalidMetadataError(Exception):
+    """Is being thrown if Metadata is missing or corrupt."""
+    pass
 class SampleFormat(str, Enum):
     PCM16 = "pcm16"
     FLOAT32 = "float32"
     OPUS = "opus"
 @dataclass
 class BaseInputMetadata(ABC):
+    """
+    source_id = The sensor, for example camera1, microphone1...
+    service_id = The service which processed the data e.g. Gaze Detection etc.
+    """
     time_stamp:str
     source_id:str
+    service_id: str
     encoding:str
     def as_dict(self):
         return {k: str(v) for k, v in asdict(self).items()}
@@ -53,14 +61,24 @@ class InputLayerMetadataSound(BaseInputMetadata):
 
 
 class InputLayerProducer:
-    def __init__(self, topic:str, source_name:str, broker:str = "152.53.32.66:4222"):
+    def __init__(self, source_name:str, service:str, broker:str = "152.53.32.66:4222"):
         self.broker = broker
-        self.topic = topic
+        self.topic = self.build_topic_name(source_name, service)
         self._connected= False
         self.producer = None
         self.id= source_name
-        
+        self.source_id = source_name
+        self.service_id = service
+    
+    def build_topic_name(self,source_id:str, service_id:str) -> str:
+        if source_id and service_id:
+            return f"input.{source_id}.{service_id}".lower()
+        raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
+    
     async def connect(self):
+        """
+        connects to the NATS Backend 
+        """
         if self._connected:
             return
         try:
@@ -73,6 +91,9 @@ class InputLayerProducer:
             print("Error happened: ",e)
                 
     async def _send_message(self, data, metadata:dict):
+        """
+        sends generic messages to NATS  
+        """
         if not self._connected:
             await self.connect()    
         try:
@@ -82,31 +103,41 @@ class InputLayerProducer:
             print(f"Error sending message: {e}")
     
     #TODO: Implement sending Audio Chunks
-    async def send_audio_chunk(self, fps, audio_grabber:AudioGrabber, sample_rate=16000, channels=1):
+    async def send_audio_chunk(self, audio_grabber:AudioGrabber, sample_rate=16000, channels=1):
+        """
+        sends audio chunk to NATS using the _send_messages 
+        """
         if not self._connected:
             await self.connect()
-
+        sample_rate_str = str(getattr(audio_grabber, "sample_rate", sample_rate) or sample_rate)
+        channels_str = str(getattr(audio_grabber, "channels", channels) or channels)
+        chunk_ms_str = str(getattr(audio_grabber, "chunk_ms", 100))  # default 100ms if missing
+        
         audio_bytes = audio_grabber.read_chunk()
         metadata = InputLayerMetadataSound(
             time_stamp=str(time.time()),
-            source_id=str(self.id),
+            source_id=str(self.source_id),
+            service_id= str(self.service_id),
             encoding= "int16",
-            sample_rate= str(sample_rate),
-            channels= str(channels),
+            sample_rate= sample_rate_str,
+            channels= channels_str,
             sample_format= SampleFormat.PCM16,
-            chunk_ms= str(fps)
+            chunk_ms= chunk_ms_str,
         ).as_dict()
 
         await self._send_message(audio_bytes, metadata=metadata)
-        await asyncio.sleep(1.0/fps)
+        await asyncio.sleep(1.0/audio_grabber.chunk_ms)
     
     async def send_frame(self, frame_grabber:FrameGrabber, fps=30):
-        """Capture a frame from FrameGrabber and send to NATS"""
+        """
+        Capture a frame from FrameGrabber and send to NATS
+        """
         frame_bytes = frame_grabber.read_frame()
         if frame_bytes:
             metadata = InputLayerMetadataVideo(
                 time_stamp=int(time.time()),
-                source_id=self.id,
+                source_id=str(self.source_id),
+                service_id= str(self.service_id),
                 encoding="jpeg",
                 width=frame_grabber.width,
                 height=frame_grabber.height
@@ -116,6 +147,9 @@ class InputLayerProducer:
             await asyncio.sleep(1.0/fps)
             
     async def disconnect(self):
+        """
+        disconnects from NATS  
+        """
         if self._connected and self.producer:
             try:
                 await self.producer.drain()
@@ -131,20 +165,28 @@ class InputLayerProducer:
 
 
 class InputResultWrapper():
-
+    """
+    Wraps the incomming DATA to InputResult Type    
+    """
     def __init__(self, msg):
         self.msg = msg
 
 
 
 class InputLayerConsumer:
+    "This is the old Consumer Class this wont get updated for audio"
     def __init__(self, topic:str, broker:str= "152.53.32.66:4222"):
         self.broker= broker
-        self.topic= topic
+        self.topic= self.build_topic_name(topic)
         self._connected= False
         self.consumer= None
         self.subscription = None
-        
+    
+    def build_topic_name(self, topic: str) -> str:
+        if not topic.startswith("input."):
+            return f"input.{topic}"
+        return topic
+    
     async def connect(self):
         if self._connected:
             return
@@ -154,15 +196,7 @@ class InputLayerConsumer:
             print(f"Connected to NATS topic '{self.topic}'")
         except Exception as e:
             print("Error happened: ",e)
-
-    """ @staticmethod
-    def wrap_callback(cb):
-        async def wrapper(msg):
-            wrapped = InputResultWrapper(msg)
-            await cb(wrapped)
-        return wrapper   """  
     
-
     async def consume(self, onFrame: Callable):
         if not self._connected and self.consumer:
             await self.connect()   
@@ -216,13 +250,17 @@ class InputLayerConsumerThread:
     - The same behaviour is applied to the audio threads
     """
 
-    def __init__(self, topic:str, broker:str= "152.53.32.66:4222"):
+    def __init__(self, source_name:str, service:str, broker:str= "152.53.32.66:4222"):
         self.broker = broker
-        self.topic = topic
+        self.source_id = source_name
+        self.service_id = service
+        self.topic = self.build_topic_name(self.source_id, self.service_id)
         self._connected = False
         self.consumer = None
         self.subscription = None
-
+        
+        
+        #Frame Section
         self.latest_frame = None
         self.latest_msg = None
         self.frame_lock = threading.Lock()
@@ -232,10 +270,21 @@ class InputLayerConsumerThread:
         self.user_callback: Optional[Callable[[np.ndarray], None]] = None
         self.callback_thread: Optional[threading.Thread] = None
         
+        #Audio Section
         self.shared_aduio_queue = Queue()
         self.callback_queue = Queue()
-
+        self.audio_player = None
+        self.audio_thread = None
+        
+    def build_topic_name(self,source_id:str, service_id:str) -> str:
+        if source_id and service_id:
+            return f"input.{source_id}.{service_id}".lower()
+        raise InvalidMetadataError("Source name and service needs to be declared to build a topic!")
+    
     async def connect(self):
+        """
+        Connects the Consumer to NATS
+        """
         if self._connected:
             return
         try:
@@ -252,7 +301,10 @@ class InputLayerConsumerThread:
         """
         self.user_callback = callback
 
-    async def consume_video(self):
+    async def consume_video(self, play_video = False):
+        """
+        Consumes video and sets the Dispaly and callback
+        """
         if not self._connected or not self.consumer:
             await self.connect()
 
@@ -268,9 +320,11 @@ class InputLayerConsumerThread:
 
         self.subscription = await self.consumer.subscribe(self.topic, cb=message_handler)
 
+        
         # Start display thread
-        display_thread = threading.Thread(target=self._display_loop, daemon=True)
-        display_thread.start()
+        if play_video:
+            display_thread = threading.Thread(target=self._display_loop, daemon=True)
+            display_thread.start()
 
         # Start callback thread if provided
         if self.user_callback:
@@ -279,12 +333,18 @@ class InputLayerConsumerThread:
 
         print("[Consumer] Started zero-delay display & callback threads.")
         # Keep coroutine alive
-        while self.running:
-            await asyncio.sleep(0.001)
+        #while self.running:
+        #    await asyncio.sleep(0.01)
 
+        if not hasattr(self, "_background_task") or self._background_task.done():
+            self._background_task = asyncio.create_task(self._run_forever())
+        
+        return
     
-    async def consume_audio(self):
-    
+    async def consume_audio(self, play_audio:bool = False):
+        """
+        Consumes the Audio Chunks and sets the Callback
+        """
         if not self._connected or not self.consumer:
             await self.connect()
 
@@ -302,11 +362,23 @@ class InputLayerConsumerThread:
             self.callback_thread = threading.Thread(target=self._callback_loop_audio_queue, args=(), daemon=True)
             self.callback_thread.start()
 
+        if play_audio and self.audio_player is None:
+            self.audio_player = AudioPlayer()
+            self.audio_player.start(queue=self.shared_aduio_queue)
         # Keep coroutine alive while running
-        while self.running:
-            await asyncio.sleep(0.01)
+        #while self.running:
+        #    await asyncio.sleep(0.01)
+        
+        if not hasattr(self, "_background_task") or self._background_task.done():
+            self._background_task = asyncio.create_task(self._run_forever())
+
+        return
     
     def _display_loop(self):
+        """
+        This is the Display Loop that is offloaded into a seperate Thread
+        TODO: This could be seperated into its own VideoPlayer Class like i did with the AudioPlayer
+        """
         print("[Display] Thread started.")
         while self.running:
             frame = None
@@ -326,7 +398,7 @@ class InputLayerConsumerThread:
         cv2.destroyAllWindows()
 
     def _callback_loop(self):
-        """Continuously calls the user callback with the latest frame."""
+        """Continuously calls the user callback with the latest frame. This is also offloaded into a seperate Thread"""
         print("[Callback] Thread started.")
         while self.running:
             frame = None
@@ -344,20 +416,19 @@ class InputLayerConsumerThread:
                     print("[Callback] Error in user callback:", e)
 
             # small sleep to prevent tight loop
-            time_wait = 0.001
+            time_wait = 0.01
             threading.Event().wait(time_wait)
 
         print("[Callback] Thread exiting.")
 
     def _callback_loop_audio_queue(self):
-        """Continuously calls the user callback with the latest audio chunk."""
+        """Continuously calls the user callback with the latest audio chunk. This is also offloaded into a seperate Thread"""
         print("[Callback] Thread started.")
         time_wait = None
         while self.running:
             try:
                 msg = self.callback_queue.get_nowait()
                 time_wait = 1.0 / int(msg.headers["chunk_ms"])
-                print("dasd",time_wait)
                 print("queue was read")
             except queue.Empty:
                 msg = None
@@ -366,7 +437,6 @@ class InputLayerConsumerThread:
             if msg is not None and self.user_callback:
                 try:
                     self.user_callback(msg)
-                    print("USER CALLBACK WAS USED")
                 except Exception as e:
                     print("[Callback] Error in user callback:", e)
             if time_wait is not None:
@@ -386,6 +456,12 @@ class InputLayerConsumerThread:
             print("[Consumer] Disconnected cleanly.")
         else:
             print("[Consumer] No active connection to disconnect.")
+    
+    async def _run_forever(self):
+        """Internal background task to keep the event loop alive."""
+        while self.running:
+            await asyncio.sleep(0.01)
+
 
  
 import time

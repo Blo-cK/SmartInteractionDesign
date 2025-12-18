@@ -58,7 +58,7 @@ async def run_consumer():
         print("Face extractor producer is online")
     
     consumer = InputLayerConsumer(
-        topic="input.faceextractor.frames",
+        topic="input.camera1.faceextractor",
         broker="152.53.32.66:4222"
     )
     
