@@ -1,4 +1,3 @@
-"""Consumer: NATS → Audio Transcription and Text Emotion Detection → Kafka"""
 import asyncio
 import torch
 import wave
@@ -18,8 +17,8 @@ from architecture.library.input_layer import InputLayerConsumer
 from architecture.library.output_layer import OutputLayerProducer
 
 WHISPER_MODEL_SIZE = "medium"  # Options: tiny, base, small, medium, large
-EMOTION_MODEL_NAME = "cardiffnlp/twitter-roberta-base-emotion-multilabel-latest"
-#https://huggingface.co/cardiffnlp/twitter-roberta-base-emotion-multilabel-latest
+EMOTION_MODEL_NAME = "facebook/bart-large-mnli"  
+
 
 LANGUAGE = "de"
 USE_GPU = torch.cuda.is_available()
@@ -29,14 +28,14 @@ NATS_TOPIC="audio_microphone"
 NATS_BROKER="152.53.32.66:4222"
 KAFKA_BROKER="152.53.32.66:9094"
 
+print("Initializing models...")
 transcriber = GermanWhisperTranscriber(model_size=WHISPER_MODEL_SIZE, device="cuda" if USE_GPU else "cpu")
-emotion_classifier = GermanEmotionClassifier(model_name=EMOTION_MODEL_NAME, device="cuda" if USE_GPU else "cpu")
+emotion_classifier = GermanEmotionClassifier(model_name=EMOTION_MODEL_NAME)
+print("Models initialized successfully.")
 
 DEBUG_MODE = True
 
-# Trys to connect to Nats SRC. If timeout is reached -> use local camera
 async def try_nats_queue(consumer,timeout=1.0):
-    """Attempt to connect to subscribe to NATS_Topic"""
     try:
         await asyncio.wait_for(consumer.connect(),timeout)
         print("Connected to nats stream")
@@ -45,7 +44,6 @@ async def try_nats_queue(consumer,timeout=1.0):
         return False
 
 async def save_wav(filename: str, audio: np.ndarray):
-    """audio chunk into WAV file."""
     with wave.open(filename, "wb") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)  # 16-bit audio
@@ -53,28 +51,31 @@ async def save_wav(filename: str, audio: np.ndarray):
         wf.writeframes((audio * 32767).astype(np.int16).tobytes())
 
 async def transcribe_audio(audio):
-    """
-    Transcribe audio chunk and detect emotion.
-    """
-    print("Transcribing...")
+    print("[Transcription] Processing audio...")
     try:
         text = transcriber.transcribe(audio, sample_rate=SAMPLE_RATE, language=LANGUAGE)
-        if text.strip():
-            print("Transcribed: ",text)
+        if text and text.strip():
+            print(f"[Transcription]: '{text}'")
             return text
         else:
-            print("No speech detected.")
+            print("[Transcription] No speech detected in audio chunk.")
             return None
     except Exception as e:
-        print(f"Error in transcription/emotion: {e}")
+        print(f"[Transcription] Error: {e}")
+        return None
 
 
 async def main():
     os.makedirs("./temp", exist_ok=True)
-    print(f"Starting microphone stream on device: {device} (GPU: {USE_GPU})")
-    print(f"Whisper model: {WHISPER_MODEL_SIZE}, Emotion model: {EMOTION_MODEL_NAME}")
-    print(f"Language: {LANGUAGE}, Chunk duration: {CHUNK_DURATION}s")
-    print("Listening... Press Ctrl+C to stop.")
+
+    print(f"Device: {device} (GPU: {'Enabled' if USE_GPU else 'Disabled'})")
+    print(f"Whisper model: {WHISPER_MODEL_SIZE}")
+    print(f"Emotion model: {EMOTION_MODEL_NAME}")
+    print(f"Chunk duration: {CHUNK_DURATION}s")
+    print(f"NATS topic: {NATS_TOPIC}")
+    print(f"Kafka broker: {KAFKA_BROKER}")
+    print("="*60)
+    print("🎧 Listening for audio... Press Ctrl+C to stop.\n")
     async def handle_message(msg):
         audio = msg.astype(np.float32)
         if len(audio) < SAMPLE_RATE * CHUNK_DURATION:
@@ -87,10 +88,15 @@ async def main():
         if text == None:
             return
         
+        # Detect emotion using transformer model
         emotion_result = emotion_classifier.predict(text)
-        print(f"Detected emotion: {emotion_result['emotion']} (confidence: {emotion_result['confidence']:.2f})")
-        print(f"All scores: {emotion_result['all']}")
         
+        # Enhanced logging with all emotion scores
+        print(f"[Emotion] Detected: {emotion_result['emotion']} (confidence: {emotion_result['confidence']:.2f})")
+        if DEBUG_MODE:
+            print(f"[Emotion] All scores: {emotion_result['all']}")
+        
+        # Send to Kafka
         await kafka.sendData(msg.headers, emotion_result, 'model_emotion_text')
     
     consumer = InputLayerConsumer(
