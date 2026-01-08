@@ -1,19 +1,12 @@
-"""
-This is an example workflow - from producing a video using a sensor (e.g your Camera) to processing it and sending
-the result to the output layer.
-"""
 import asyncio
-import uuid
 import cv2
 import numpy as np
-from datetime import datetime
-import os, sys
 
 from architecture.library.frame_grabber import FrameGrabber
 from architecture.library.input_layer import InputLayerConsumer, InputLayerProducer, InputResultWrapper
 from architecture.library.output_layer import OutputLayerProducer
 
-from ultralytics import solutions
+from ultralytics import YOLO
 
 
 ######################################################################
@@ -52,25 +45,36 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
     A InputLayerConsumer is used to retrieve the data out of the NATS.
     """
     consumer = InputLayerConsumer(topic=topic)
-    region_points = {
-        # "region-a": [(50, 450), (250, 450), (250, 250), (50, 250)],
-        "region-b": [(350, 450), (250, 450), (250, 250), (350, 250)],
-    }
-    # Initialize region counter
-    region_counter = solutions.RegionCounter(
-        show=True,  # display the frame
-        region=region_points,  # pass region points
-        model="yolo11n.pt",  # model for counting in regions
-        classes=[0],  # classes to track, eg people = 0
-        conf=0.35,  # confidence level
-        verbose=False  # mute auto console prints
-    )
+
+    previous_count = {"people_in_region": 0}
+    model = YOLO("yolo11n.pt")
+    # region coordinates
+    region_x1, region_x2 = 650, 1100
+    region_y1, region_y2 = 250, 650
 
     async def count_people_in_region(frame):
-        results = region_counter(frame)
-        people_in_region = results.region_counts.get("region-b", 0)
+        results = model.track(frame, persist=True, classes=[0], conf=0.35, verbose=False)
+        people_in_region = 0
 
-        return {"people_in_region": people_in_region}
+        boxes = results[0].boxes
+        # iterate over all tracked boxes in frame
+        for box in boxes:
+            # grab center of tracked box
+            x_center = float((box.xyxy[0][0] + box.xyxy[0][2]) / 2)
+            y_center = float((box.xyxy[0][1] + box.xyxy[0][3]) / 2)
+
+            # check if center of tracked box is inside the region
+            if region_x1 <= x_center <= region_x2 and region_y1 <= y_center <= region_y2:
+                people_in_region += 1
+
+        # show region in frame
+        color = (145, 0, 175)
+        thickness = 2
+        cv2.rectangle(frame, (region_x1, region_y1), (region_x2, region_y2), color, thickness)
+        cv2.putText(frame, f"Count: {people_in_region}", (region_x1, region_y1-10),
+        cv2.FONT_ITALIC, 0.9, color, thickness)
+
+        return {"people_in_region": people_in_region}, frame
 
     async def handle_message(result: InputResultWrapper):
         """
@@ -84,20 +88,24 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
         data = np.frombuffer(result.msg.data, np.uint8)
         frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
+        # ML Processing
+        processed_result, frame = await count_people_in_region(frame)
+
         # Show frame
         if frame is not None:
             cv2.imshow("Async Consumer Stream", frame)
             cv2.waitKey(1)
 
-        # ML Processing
-        processed_result = await count_people_in_region(frame)
+        # only send data if current value differs from previously sent value
+        if previous_count["people_in_region"] != processed_result["people_in_region"]:
+            previous_count["people_in_region"] = processed_result["people_in_region"]
 
-        # send Output Layer
-        await output_producer.sendData(
-            input_result=result,
-            result=processed_result,
-            service_id=service_name
-        )
+            # send Output Layer
+            await output_producer.sendData(
+                input_result=result,
+                result=processed_result,
+                service_id=service_name
+            )
 
     await consumer.connect()
     await consumer.consume(onFrame=handle_message)
