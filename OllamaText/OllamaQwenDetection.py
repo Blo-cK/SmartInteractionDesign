@@ -13,7 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from architecture.library.input_layer import InputLayerConsumerThread
+from architecture.library.input_layer import InputLayerConsumerThread, InputLayerProducer, FrameGrabber
+from architecture.library.output_layer import OutputLayerProducer
 
 #INSTRUCTION = "Bitte extrahiere sichtbaren Text (OCR) und beschreibe kurz den Bildinhalt."
 INSTRUCTION = """instruction = "You are a smart and reliable assistant. 
@@ -25,14 +26,19 @@ Fill 'context' with notable information about how the text is displayed.
 Fill'context_short' with a very brief summary of the context."
 """
 
-async def main():
+
+
+
+
+
+async def image_detection(topic: str, output_producer: OutputLayerProducer, service_name: str):
     broker = "152.53.32.66:4222"
     source_name = "cam1"
-    service_id = "example_serviceL"
 
-    consumer = InputLayerConsumerThread(source_name=source_name, service=service_id, broker=broker)
+    consumer = InputLayerConsumerThread(source_name=source_name, service=service_name, broker=broker)
 
-    def handle_frame(msg, frame):
+    async def handle_frame(msg, frame):
+        print("[handle_frame] Nachricht empfangen. Verarbeite Frame...")
         try:
             # Zeige das Bild im Fenster an
             cv2.imshow("Live Video", frame)
@@ -56,21 +62,18 @@ async def main():
                     )
                     try:
                         print("Antwort:", resp['message']['content'])
-                    except Exception:
-                        print("Antwort (attr):", resp.message.content)
-                except Exception:
-                    # fallback to data-URI
-                    b64 = base64.b64encode(img_bytes).decode("ascii")
-                    md_image = f"![capture](data:image/jpeg;base64,{b64})\n\n{INSTRUCTION}"
-                    try:
-                        print("Direkter Byte-Upload fehlgeschlagen, versuche data-URI ...")
-                        resp = chat(model="qwen3-vl:4b", messages=[{"role": "user", "content": md_image}])
-                        try:
-                            print("Antwort:", resp['message']['content'])
-                        except Exception:
-                            print("Antwort (attr):", resp.message.content)
-                    except Exception as e2:
-                        print("Fehler beim Senden an ollama:", e2)
+
+                        # Nachricht an OutputLayer senden
+                        await output_producer.sendData(
+                            input_result=msg,
+                            result=resp['message']['content'],
+                            service_id=service_name
+                        )
+
+                    except Exception as e:
+                        print("Fehler beim Verarbeiten der Antwort:", e)
+                except Exception as e:
+                    print("Fehler beim Senden an qwen3-vl:4b:", e)
         except Exception as e:
             print("Fehler in handle_frame:", e)
 
@@ -79,13 +82,68 @@ async def main():
             consumer.running = False
             cv2.destroyAllWindows()
 
+    print("Versuche zu senden")
+    await output_producer.sendData(
+        input_result="result",
+        result="{'status': 'ready'}",
+        service_id=service_name
+        )
+    print("Gesendet")
+
     # Schließe das Fenster, wenn das Programm beendet wird
     consumer.on_message(handle_frame)
     await consumer.connect()
     await consumer.consume_video(play_video=False)  # Kein zusätzliches Fenster öffnen
 
+    await output_producer.producer.stop()  # Schließt den AIOKafkaProducer
+
     # keep running
     await asyncio.Future()
+
+
+
+async def producer_task(source_name: str, service: str):
+    """
+    This function uses the Library to create an InputLayerProducer and a Frame Grabber.
+    The FrameGrabber is used to get data from your Camera.
+    The InputLayerProducer is used to send the Frames into the NATS (30 FPS).
+    This is basically used to simulate the "real" camera of the agent.
+    Consumers can subscribe to the topic to get the data out of the NATS.
+    """
+    producer = InputLayerProducer(source_name=source_name, service=service)
+    grabber = FrameGrabber(device=0, width=1920, height=1080, jpeg_quality=40)
+
+    await producer.connect()
+
+    try:
+        while True:
+            await producer.send_frame(grabber, 30)
+            
+    except asyncio.CancelledError:
+        print("Producer stopped.")
+    finally:
+        grabber.release()
+        await producer.disconnect()
+
+
+
+
+async def main():
+    topic = "input.cameras.camera1"
+    service_name = "example_service2"
+
+    output_producer = OutputLayerProducer()
+
+    try:
+        await asyncio.gather(
+            producer_task("Sensor1", service_name),
+            image_detection(topic, output_producer, service_name)
+        )
+    except KeyboardInterrupt:
+        print("Shutting down workflow...")
+    finally:
+        await output_producer.disconnect()
+        print("OutputLayerProducer wurde getrennt.")
 
 
 if __name__ == "__main__":
