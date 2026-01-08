@@ -5,3 +5,6 @@ nats-py
 flask
 gunicorn
 gevent
+requests
+sounddevice
+-r ContextProvider/requirements.txt

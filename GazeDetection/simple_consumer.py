@@ -11,20 +11,17 @@ import requests
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from architecture.library.input_layer import InputLayerConsumer
 from architecture.library.output_layer import OutputLayerProducer
+from architecture.library.monitor_client import MonitorClient
 from gazedetection import GazeDetector
 
 
 async def check_producer_online(service_id="camera1", monitor_url="http://152.53.32.66:5000"):
-    """Check if face extractor producer service is online via REST API"""
+    """Check if face extractor producer service is online via MonitorClient"""
     try:
-        response = requests.get(f"{monitor_url}/api/services/input/monitor/{service_id}", timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            # API returns nested dict: {'service_id': {'online': True, 'last_seen': ...}}
-            service_data = data.get(service_id, {})
-            is_online = service_data.get('online', False)
-            return is_online
-        print(f"Monitor returned status code: {response.status_code}")
+        client = MonitorClient(base_url=monitor_url)
+        status = client.get_online_status(service_id)
+        if status:
+            return status.online
         return False
     except Exception as e:
         print(f"Failed to check producer status: {e}")
@@ -35,18 +32,15 @@ async def start_producer():
     """Start the producer as a subprocess"""
     print("Starting face producer")
     producer_path = os.path.join(os.path.dirname(__file__), "gaze_nats_producer.py")
-    conda_env = "emotionsdetektion_elena_ryumina"
+    venv_python = os.path.join(os.path.dirname(__file__), "venv", "Scripts", "python.exe")
     
-    # Start producer as background process
+    # Start producer as background process using venv
     subprocess.Popen(
-        [
-            "C:/anaconda3/Scripts/conda.exe", "run", "-n", conda_env,
-            "--no-capture-output", "python", producer_path
-        ],
+        [venv_python, producer_path],
         cwd=os.path.dirname(__file__),
         creationflags=subprocess.CREATE_NEW_CONSOLE
     )
-    print("Face extractor Producer started in new console")
+    print("Face extractor Producer started in new console (using venv)")
     await asyncio.sleep(10)  # Wait for producer to initialize
 
 
@@ -61,7 +55,7 @@ async def run_consumer():
         print("Face extractor producer is online")
     
     consumer = InputLayerConsumer(
-        topic="input.faceextractor.frames",
+        topic="input.camera1.faceextractor",
         broker="152.53.32.66:4222"
     )
     

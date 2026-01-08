@@ -37,7 +37,8 @@ async def send_face_with_data(producer, face_img, bbox_info, face_id, frame_size
     h, w = face_img.shape[:2]
     metadata = InputLayerMetadataVideo(
         time_stamp=int(time.time()),
-        source_id=producer.id,
+        source_id=producer.source_id,
+        service_id=producer.service_id,
         encoding='json',
         width=w,
         height=h
@@ -48,8 +49,8 @@ async def send_face_with_data(producer, face_img, bbox_info, face_id, frame_size
 
 async def run_producer(num_frames=-1):
     producer = InputLayerProducer(
-        topic="input.faceextractor.frames",
         source_name="camera1",
+        service="faceextractor",
         broker="152.53.32.66:4222"
     )
     

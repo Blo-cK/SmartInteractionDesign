@@ -199,9 +199,56 @@ class WebcamFaceExtractor:
         except Exception as e:
             print(f"Error in _cleanup_old_frames: {e}")
     
+    def _normalize_frame_format(self, frame):
+        """Convert frame to standard 8-bit BGR format for face_recognition compatibility"""
+        try:
+            if frame is None or frame.size == 0:
+                return None
+            
+            # Check frame dtype and convert if needed
+            if frame.dtype != np.uint8:
+                print(f"⚠️ Converting frame dtype from {frame.dtype} to uint8")
+                if frame.dtype == np.uint16:
+                    # Convert 16-bit to 8-bit
+                    frame = cv2.convertScaleAbs(frame, alpha=255.0/65535.0)
+                elif frame.dtype == np.float32 or frame.dtype == np.float64:
+                    # Convert float to 8-bit
+                    frame = cv2.convertScaleAbs(frame, alpha=255.0)
+                else:
+                    # Fallback: generic conversion
+                    frame = frame.astype(np.uint8)
+            
+            # Check number of channels
+            if len(frame.shape) == 2:
+                # Grayscale - convert to BGR
+                print(f"⚠️ Converting grayscale to BGR")
+                frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+            elif len(frame.shape) == 3:
+                channels = frame.shape[2]
+                if channels == 4:
+                    # RGBA or BGRA - convert to BGR
+                    print(f"⚠️ Converting RGBA/BGRA ({channels} channels) to BGR")
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+                elif channels != 3:
+                    # Unexpected number of channels
+                    print(f"⚠️ Unexpected {channels} channels, attempting conversion")
+                    frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+            
+            return frame
+            
+        except Exception as e:
+            print(f"❌ Error normalizing frame format: {e}")
+            return None
+    
     def _extract_and_save_faces(self, frame, frame_filename):
         """Extract faces from frame using robust face detection and save with IDs"""
         try:
+            # Normalize frame format for compatibility with different cameras
+            frame = self._normalize_frame_format(frame)
+            if frame is None:
+                print("⚠️ Skipping frame due to format normalization error")
+                return
+            
             # Convert BGR to RGB for face_recognition
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             
