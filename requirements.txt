@@ -7,4 +7,5 @@ gunicorn
 gevent
 requests
 sounddevice
+ultralytics
 -r ContextProvider/requirements.txt
