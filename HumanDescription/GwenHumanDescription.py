@@ -3,7 +3,7 @@
 Gwen Human Description Service
 
 Konsumiert Base64-kodierte Personenbilder vom human_image_capture Service
-und generiert natürlichsprachliche Beschreibungen mittels Ollama (qwen2-vl:7b).
+und generiert natürlichsprachliche Beschreibungen mittels Ollama (qwen3-vl:4b).
 
 Input: output.*.human_image_capture
 Output: output.<source_id>.human_description
@@ -41,7 +41,7 @@ class GwenHumanDescriptionService:
         service_id: str = "human_description",
         kafka_broker: str = "152.53.32.66:9094",
         ollama_url: str = "http://localhost:11434",
-        ollama_model: str = "qwen2-vl:7b",
+        ollama_model: str = "qwen3-vl:4b",
         storage_dir: str = "descriptions",
         max_retries: int = 3,
         retry_delay: float = 1.0
@@ -119,7 +119,7 @@ Be objective, detailed, and factual. Focus on visible characteristics only."""
                         "images": [base64_image],
                         "stream": False
                     },
-                    timeout=30
+                    timeout=330
                 )
 
                 if response.status_code == 200:
@@ -199,12 +199,12 @@ Be objective, detailed, and factual. Focus on visible characteristics only."""
 
             result = metadata.result
             person_id = result.get("person_id", 0)
-            base64_image = result.get("image")
+            base64_image = result.get("image_base64")  # Korrekter Feldname
             confidence = result.get("confidence", 0.0)
             bbox = result.get("bbox", [])
 
             if not base64_image:
-                logger.error("No image data in message")
+                logger.error(f"No image data in message. Available keys: {list(result.keys())}")
                 self.stats["errors"] += 1
                 return False
 
@@ -314,7 +314,7 @@ async def main():
         service_id="human_description",
         kafka_broker="152.53.32.66:9094",
         ollama_url="http://localhost:11434",
-        ollama_model="qwen2-vl:7b",
+        ollama_model="qwen3-vl:4b",
         storage_dir="descriptions",
         max_retries=3,
         retry_delay=1.0
