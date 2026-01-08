@@ -32,18 +32,15 @@ async def start_producer():
     """Start the producer as a subprocess"""
     print("Starting face producer")
     producer_path = os.path.join(os.path.dirname(__file__), "gaze_nats_producer.py")
-    conda_env = "emotionsdetektion_elena_ryumina"
+    venv_python = os.path.join(os.path.dirname(__file__), "venv", "Scripts", "python.exe")
     
-    # Start producer as background process
+    # Start producer as background process using venv
     subprocess.Popen(
-        [
-            "C:/anaconda3/Scripts/conda.exe", "run", "-n", conda_env,
-            "--no-capture-output", "python", producer_path
-        ],
+        [venv_python, producer_path],
         cwd=os.path.dirname(__file__),
         creationflags=subprocess.CREATE_NEW_CONSOLE
     )
-    print("Face extractor Producer started in new console")
+    print("Face extractor Producer started in new console (using venv)")
     await asyncio.sleep(10)  # Wait for producer to initialize
 
 
