@@ -12,7 +12,7 @@ from ultralytics import YOLO
 ######################################################################
 # PRODUCER TASK – captures camera frames and publishes to NATS
 ######################################################################
-async def producer_task(topic: str, source_name: str):
+async def producer_task(service_name: str, source_name: str):
     """
     This function uses the Library to create a InputLayerProducer and a Frame Grabber.
     The FrameGrabber is used to get data from your Camera.
@@ -20,7 +20,7 @@ async def producer_task(topic: str, source_name: str):
     This is basically used to simulate the "real" camera of the agent.
     Consumers can subscribe to the topic to get the data out of the NATS.
     """
-    producer = InputLayerProducer(topic=topic, source_name=source_name)
+    producer = InputLayerProducer(service=service_name, source_name=source_name)
     grabber = FrameGrabber(device=0, width=1920, height=1080, jpeg_quality=40)
 
     await producer.connect()
@@ -115,15 +115,16 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
 # MAIN WORKFLOW
 ######################################################################
 async def main():
-    topic = "input.cameras.camera1"
+    source_name = "camera1.region_counting"
     service_name = "region_counting"
+    producer_topic = f"input.{source_name}.{service_name}".lower()
 
     output_producer = OutputLayerProducer()
 
     try:
         await asyncio.gather(
-            producer_task(topic, "RegionCountingSensor"),
-            consumer_task(topic, output_producer, service_name)
+            producer_task(service_name, source_name),
+            consumer_task(producer_topic, output_producer, service_name)
         )
     except KeyboardInterrupt:
         print("Shutting down workflow...")
