@@ -46,7 +46,7 @@ async def start_producer():
 
 async def run_consumer():
     print("🔍 Checking if frame producer is online")
-    is_online = await check_producer_online("camera1_fullframe")
+    is_online = await check_producer_online("camera1.fullframe")
     
     if not is_online:
         print("Frame producer is not online -> starting it")

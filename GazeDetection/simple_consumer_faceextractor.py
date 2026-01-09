@@ -140,7 +140,7 @@ async def run_consumer():
             'bbox': bbox_info
         }
         
-        await kafka.sendData(msg, result, 'gaze_detector')
+        await kafka.sendData(msg, result, 'gaze_detector_faceextractor')
         
         print(f"✅ {face_id}: head_position x={head_position['x']:.4f}, y={head_position['y']:.4f} (frame coords) → Kafka")
         
