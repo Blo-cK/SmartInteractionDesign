@@ -104,12 +104,15 @@ async def run_consumer():
                     'pitch': face_data['pitch'],
                     'yaw': face_data['yaw'],
                     'roll': face_data['roll'],
-                }
+                },
+                'head_position': face_data.get('head_position')
             }
             
             await kafka.sendData(msg, result, 'gaze_detector')
             
-            print(f"{face_data['face_id']}: pitch={face_data['pitch']:.2f}°, yaw={face_data['yaw']:.2f}°, roll={face_data['roll']:.2f}° → Kafka")
+            head_pos = face_data.get('head_position', {})
+            head_pos_str = f", pos=({head_pos.get('x', 0):.4f}, {head_pos.get('y', 0):.4f})" if head_pos else ""
+            print(f"{face_data['face_id']}: pitch={face_data['pitch']:.2f}°, yaw={face_data['yaw']:.2f}°, roll={face_data['roll']:.2f}°{head_pos_str} → Kafka")
         
         count[0] += len(faces_data)
     
