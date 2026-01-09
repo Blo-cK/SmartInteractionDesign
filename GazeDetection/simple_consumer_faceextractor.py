@@ -30,8 +30,8 @@ async def check_producer_online(service_id="camera1", monitor_url="http://152.53
 
 async def start_producer():
     """Start the producer as a subprocess"""
-    print("Starting face producer")
-    producer_path = os.path.join(os.path.dirname(__file__), "gaze_nats_producer.py")
+    print("Starting frame producer")
+    producer_path = os.path.join(os.path.dirname(__file__), "face_extractor_producer.py")
     venv_python = os.path.join(os.path.dirname(__file__), "venv", "Scripts", "python.exe")
     
     # Start producer as background process using venv
@@ -40,19 +40,19 @@ async def start_producer():
         cwd=os.path.dirname(__file__),
         creationflags=subprocess.CREATE_NEW_CONSOLE
     )
-    print("Face extractor Producer started in new console (using venv)")
+    print("Frame producer started in new console (using venv)")
     await asyncio.sleep(10)  # Wait for producer to initialize
 
 
 async def run_consumer():
-    print("🔍 Checking if face extractor producer is online")
+    print("🔍 Checking if frame producer is online")
     is_online = await check_producer_online("camera1")
     
     if not is_online:
-        print("Face extractor producer is not online -> starting it")
+        print("Frame producer is not online -> starting it")
         await start_producer()
     else:
-        print("Face extractor producer is online")
+        print("Frame producer is online")
     
     consumer = InputLayerConsumer(
         topic="input.camera1.faceextractor",
@@ -75,49 +75,75 @@ async def run_consumer():
         # msg is InputResultWrapper, actual NATS message is in msg.msg
         json_data = msg.msg.data
         
-        # Parse JSON data package
+        # Parse JSON data package from face extractor
         import base64
-        data_package = json.loads(json_data.decode('utf-8'))
-        
-        # Extract face image from base64
-        face_bytes = base64.b64decode(data_package['face_image'])
-        face_array = np.frombuffer(face_bytes, dtype=np.uint8)
-        face_img = cv2.imdecode(face_array, cv2.IMREAD_COLOR)
-        
-        if face_img is None:
+        try:
+            data_package = json.loads(json_data.decode('utf-8'))
+        except Exception as e:
+            print(f"⚠️ Failed to parse JSON: {e}")
             return
         
-        # Extract metadata from data package
+        # Extract face image from base64
+        face_image_b64 = data_package.get('face_image')
+        if not face_image_b64:
+            print("⚠️ No face_image in data")
+            return
+        
+        face_bytes = base64.b64decode(face_image_b64)
+        nparr = np.frombuffer(face_bytes, np.uint8)
+        face_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if face_img is None:
+            print("⚠️ Failed to decode face image")
+            return
+        
+        # Get metadata
+        face_id = data_package.get('face_id', 'unknown')
         bbox_info = data_package.get('bbox', {})
         frame_size = data_package.get('frame_size', {})
-        face_id = data_package.get('face_id', 'unknown')
         
-        bbox = None
-        if bbox_info:
-            bbox = (bbox_info['x'], bbox_info['y'],
-                   bbox_info['w'], bbox_info['h'])
-        
-        # Get frame dimensions
         w = frame_size.get('width', 1920)
         h = frame_size.get('height', 1080)
         
-        # Gaze detection
-        gaze = gaze_detector.detect_gaze(face_img, bbox, w, h)
+        # Detect head pose from cropped face using faceextractor's face crop
+        faces_data = gaze_detector.detect_gaze(face_img, frame_width=w, frame_height=h)
+        
+        if len(faces_data) == 0:
+            print(f"⚠️ No face detected for {face_id}")
+            return
+        
+        # Use first detected face (should only be one in crop)
+        face_data = faces_data[0]
+        
+        # Transform head position from cropped face coordinates to original frame coordinates
+        crop_head_pos = face_data.get('head_position', {'x': 0.5, 'y': 0.5})
+        
+        # Get bbox coordinates
+        bbox_x = bbox_info.get('x', 0)
+        bbox_y = bbox_info.get('y', 0)
+        bbox_w = bbox_info.get('w', w)
+        bbox_h = bbox_info.get('h', h)
+        
+        # Transform: cropped position (0-1) → bbox position → frame position (0-1)
+        frame_head_x = (bbox_x + crop_head_pos['x'] * bbox_w) / w
+        frame_head_y = (bbox_y + crop_head_pos['y'] * bbox_h) / h
+        
+        head_position = {
+            'x': round(frame_head_x, 4),
+            'y': round(frame_head_y, 4)
+        }
         
         # Send to Kafka
         result = {
-            'face_id': face_id,
-            'bbox': bbox_info,
-            'frame_size': frame_size,
-            'gaze': gaze
+            'person_id': face_id,
+            'head_position': head_position,
+            'bbox': bbox_info
         }
         
-        await kafka.sendData(msg, result, 'gaze_detector')
+        await kafka.sendData(msg, result, 'gaze_detector_faceextractor')
         
-        # Get architecture metadata from headers
-        arch_meta = msg.msg.headers or {}
-        print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}° → Kafka")
-        print(f"📋 Architecture metadata: {arch_meta}")
+        print(f"✅ {face_id}: head_position x={head_position['x']:.4f}, y={head_position['y']:.4f} (frame coords) → Kafka")
+        
         count[0] += 1
     
     # Use InputLayerConsumer.consume() as per README

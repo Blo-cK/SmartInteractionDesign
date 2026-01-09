@@ -17,7 +17,6 @@ class FaceRecognitionTracker:
         self.face_counter = 0
         self.similarity_threshold = similarity_threshold
         self.timeout_seconds = timeout_seconds
-        print("🤖 Initialized robust face recognition with deep learning")
         
     def extract_face_encoding(self, face_img):
         """Extract deep learning face encoding using face_recognition library"""
@@ -91,8 +90,6 @@ class FaceRecognitionTracker:
               f"(distance: {best_distance:.3f}, threshold: "
               f"{self.similarity_threshold})")
         
-        # Face recognition uses distance (lower is better), threshold should be low
-        # Typical threshold is 0.6 - lower means more similar
         if best_match_id and best_distance < self.similarity_threshold:
             # Update existing face
             self.known_faces[best_match_id]['encodings'].append(face_encoding)
@@ -127,31 +124,18 @@ class FaceRecognitionTracker:
             del self.known_faces[face_id]
             print(f"🗑️ Removed old face ID: {face_id}")
     
-    def get_stats(self):
-        """Get current statistics"""
-        total_encodings = sum(len(data['encodings']) for data in self.known_faces.values())
-        return {
-            'total_known_faces': len(self.known_faces),
-            'face_ids': list(self.known_faces.keys()),
-            'total_encodings_stored': total_encodings
-        }
-
 
 class WebcamFaceExtractor:
     """Main class for webcam face extraction with rolling frame buffer"""
     
     def __init__(self, frames_folder="frames", faces_folder="faces", 
-                 max_frames=100, capture_interval=1.0, on_face_extracted=None):
+                 max_frames=100, capture_interval=0.5, on_face_extracted=None):
         self.frames_folder = frames_folder
         self.faces_folder = faces_folder
         self.max_frames = max_frames
         self.capture_interval = capture_interval
         self.on_face_extracted = on_face_extracted
         
-        # Note: Directories should be created/cleared by the caller
-        # before instantiating this class
-        
-        # Initialize robust face recognition system
         self.face_tracker = FaceRecognitionTracker()
         
         # Capture control
@@ -180,8 +164,7 @@ class WebcamFaceExtractor:
                 print(f"🗑️ Cleaned directory: {folder}")
         
         self._create_directories()
-        print("🔄 Directories reset for fresh start")
-    
+        
     def _cleanup_old_frames(self):
         """Remove oldest frames if we exceed max_frames"""
         try:
@@ -356,23 +339,13 @@ class WebcamFaceExtractor:
                     self._cleanup_old_frames()
                     
                     self.frame_counter += 1
-                    # If we've reached the configured max frames, stop gracefully
-                    # (skip check if max_frames is -1 for infinite capture)
+                    # if non infinite mode
                     if self.max_frames > 0 and self.frame_counter >= self.max_frames:
                         print("⏭️ Reached max frames: "
                               f"{self.frame_counter}/{self.max_frames}."
                               " Stopping capture.")
-                        # Perform graceful stop actions from within the
-                        # capture thread
                         self._on_max_frames_reached()
                         break
-                    
-                    # Show current stats
-                    if self.frame_counter % 10 == 0:
-                        stats = self.face_tracker.get_stats()
-                        print(f"📊 Stats - Frames: {len(self.saved_frames)}, "
-                              f"Known faces: {stats['total_known_faces']}")
-                
                 else:
                     print("❌ Failed to capture frame")
                 
@@ -404,11 +377,11 @@ class WebcamFaceExtractor:
         width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         
-        print(f"📷 Camera initialized - Resolution: {width}x{height}")
-        print(f"🎯 Max frames: {self.max_frames}")
-        print(f"⏱️ Capture interval: {self.capture_interval}s")
-        print(f"📁 Frames folder: {os.path.abspath(self.frames_folder)}")
-        print(f"👥 Faces folder: {os.path.abspath(self.faces_folder)}")
+        print(f"Camera initialized - Resolution: {width}x{height}")
+        print(f"Max frames: {self.max_frames}")
+        print(f"Capture interval: {self.capture_interval}s")
+        print(f"Frames folder: {os.path.abspath(self.frames_folder)}")
+        print(f"Faces folder: {os.path.abspath(self.faces_folder)}")
         
         # Start capture thread
         self.is_running = True
@@ -416,18 +389,18 @@ class WebcamFaceExtractor:
         self.capture_thread.daemon = True
         self.capture_thread.start()
         
-        print("✅ Face extraction started!")
+        print("Face extraction started!")
     
     def stop_capture(self):
         """Stop webcam capture"""
         if not self.is_running:
-            print("⚠️ Capture not running")
+            print("Capture not running")
             return
         
-        print("🛑 Stopping capture...")
+        print("Stopping capture...")
         self.is_running = False
         
-        # Wait for thread to finish
+        # Wait for thread to finish (fail safe)
         if self.capture_thread:
             # Avoid joining from the capture thread itself
             if threading.current_thread() is not self.capture_thread:
@@ -437,27 +410,8 @@ class WebcamFaceExtractor:
         if self.cap:
             self.cap.release()
         
-        # Final statistics
-        stats = self.face_tracker.get_stats()
-        print(f"\n📊 Final Statistics:")
-        print(f"   Total frames captured: {self.frame_counter}")
-        print(f"   Current frames stored: {len(self.saved_frames)}")
-        print(f"   Unique persons detected: {stats['total_known_faces']}")
-        print(f"   Face IDs: {stats['face_ids']}")
         
-        # Save session info
-        self._save_session_info(stats)
-        
-        print("✅ Capture stopped")
-
     def _on_max_frames_reached(self):
-        """Handle graceful shutdown when max frames limit is reached.
-
-        This is safe to call from within the capture thread: it will
-        set the running flag to False, release the camera, save session
-        info and print final stats. We avoid joining the capture thread
-        here because this method is called from that thread itself.
-        """
         try:
             # Stop the loop
             self.is_running = False
@@ -468,67 +422,14 @@ class WebcamFaceExtractor:
                     self.cap.release()
                 except Exception:
                     pass
-
-            # Final statistics
-            stats = self.face_tracker.get_stats()
-            print(f"\n📊 Final Statistics (auto-stop):")
-            print(f"   Total frames captured: {self.frame_counter}")
-            print(f"   Current frames stored: {len(self.saved_frames)}")
-            print(f"   Unique persons detected: {stats['total_known_faces']}")
-            print(f"   Face IDs: {stats['face_ids']}")
-
-            # Save session info
-            self._save_session_info(stats)
-            print("✅ Auto-stop complete (max frames reached)")
-
         except Exception as e:
             print(f"Error in auto-stop handler: {e}")
     
-    def _save_session_info(self, stats):
-        """Save session information to JSON"""
-        try:
-            session_info = {
-                'session_end': datetime.now().isoformat(),
-                'total_frames_captured': self.frame_counter,
-                'frames_stored': len(self.saved_frames),
-                'max_frames_limit': self.max_frames,
-                'capture_interval_seconds': self.capture_interval,
-                'face_recognition_stats': stats,
-                'folders': {
-                    'frames': os.path.abspath(self.frames_folder),
-                    'faces': os.path.abspath(self.faces_folder)
-                }
-            }
-            
-            info_file = os.path.join(self.faces_folder, 'session_info.json')
-            with open(info_file, 'w') as f:
-                json.dump(session_info, f, indent=2)
-            
-            print(f"💾 Session info saved: {info_file}")
-            
-        except Exception as e:
-            print(f"Error saving session info: {e}")
-    
-    def get_current_stats(self):
-        """Get current statistics"""
-        stats = self.face_tracker.get_stats()
-        return {
-            'frames_captured': self.frame_counter,
-            'frames_stored': len(self.saved_frames),
-            'is_running': self.is_running,
-            'face_stats': stats
-        }
-
-
     def start(frames_folder="frames",
             faces_folder="faces",
             max_frames=100,  # Keep only 100 most recent frames
             capture_interval=2.0  # Capture every 2 seconds
         ):
-        """Main function to run the face extractor"""
-        print("🚀 Starting Webcam Face Extractor - ROBUST DEEP LEARNING VERSION")
-        print("🧠 Using state-of-the-art face recognition with dlib/face_recognition")
-        print("=" * 70)
         
         # Clear existing directories first
         import shutil
@@ -557,20 +458,16 @@ class WebcamFaceExtractor:
             # Start capture
             extractor.start_capture(camera_index=0)
             
-            print("\n🔄 System running...")
-            print("📸 Capturing frames every 2 seconds")
-            print("👥 Extracting and recognizing faces")
-            print("🗂️ Organizing faces by person ID")
-            print("🔄 Maintaining rolling buffer of 100 frames")
+            print("\nSystem running...")
+            print(" Capturing frames every 2 seconds")
+            print(" Extracting and recognizing faces")
+            print(" Organizing faces by person ID")
+            print(" Maintaining rolling buffer of 100 frames")
             print("\nPress Ctrl+C to stop...")
             
             # Keep main thread alive until capture stops or interrupted
             while extractor.is_running:
                 time.sleep(10)
-                stats = extractor.get_current_stats()
-                print(f"📊 Status - Frames: {stats['frames_stored']}/{extractor.max_frames}, "
-                      f"Persons: {stats['face_stats']['total_known_faces']}")
-                
         except KeyboardInterrupt:
             print("\n⚠️ Interrupted by user")
             
