@@ -1,127 +1,117 @@
-"""Consumer: NATS → Gaze Detection → Kafka"""
+"""Consumer: NATS (FaceExtractor) → DeepFace Detection → Kafka"""
 import asyncio
 import cv2
 import numpy as np
 import deepFaceDetection
 import json
-from concurrent.futures import ThreadPoolExecutor
+import base64
+import logging
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from architecture.library.input_layer import InputLayerConsumer
+from architecture.library.input_layer import InputLayerConsumer, InputResultWrapper
 from architecture.library.output_layer import OutputLayerProducer
 
-NUM_FRAMES=10
+NATS_TOPIC = "camera1.faceextractor"
+NATS_BROKER = "152.53.32.66:4222"
+KAFKA_BROKER = "152.53.32.66:9094"
+
 IS_VISUALIZE_ENABLED = True  # set False to disable cv2 window
-NATS_TOPIC="gaze.frames"
-NATS_BROKER="152.53.32.66:4222"
-KAFKA_BROKER="152.53.32.66:9094"
 
-# Trys to connect to Nats SRC. If timeout is reached -> use local camera
-async def try_nats_queue(consumer,timeout=1.0):
-    """Attempt to connect to subscribe to NATS_Topic"""
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def decode_face_image(msg_data):
+    """Extract and decode face image from NATS message (JSON format)"""
     try:
-        await asyncio.wait_for(consumer.connect(),timeout)
-        print("Connected to nats stream")
-        return True
-    except asyncio.TimeoutError:
-        return False
-
-async def main():
-    async def handle_message(msg):
-        face_data = msg.data
-        meta = msg.headers or {}
-
-        # Decode face image
-        face_array = np.frombuffer(face_data, dtype=np.uint8)
+        json_data = json.loads(msg_data.decode('utf-8'))
+        face_b64 = json_data.get('face_image', None)
+        
+        if face_b64 is None:
+            logger.warning("No face_image in message")
+            return None, None
+        
+        # Decode base64 image
+        face_bytes = base64.b64decode(face_b64)
+        face_array = np.frombuffer(face_bytes, dtype=np.uint8)
         face_img = cv2.imdecode(face_array, cv2.IMREAD_COLOR)
         
-        if face_img is None:
-            return
+        # Extract metadata
+        metadata = {
+            'face_id': json_data.get('face_id', 'unknown'),
+            'bbox': json_data.get('bbox', {}),
+            'frame_size': json_data.get('frame_size', {})
+        }
         
-        # Parse bbox from metadata
-        bbox_info = json.loads(meta.get('bbox', '{}'))
-        bbox = None
-        if bbox_info:
-            bbox = (bbox_info['x'], bbox_info['y'],
-                   bbox_info['w'], bbox_info['h'])
-        
-        # Get frame dimensions
-        frame_size = bbox_info.get('frame_size', {})
-        w = frame_size.get('width', 1920)
-        h = frame_size.get('height', 1080)
-        id = bbox_info.get('id')
-        
-        result = deepFaceDetection.analyze_frame(face_img,id)
-        print(result)
-        await kafka.sendData(msg.headers, result, 'model_deepFace')
-    
-    consumer = InputLayerConsumer(
+        return face_img, metadata
+    except Exception as e:
+        logger.error(f"Error decoding face image: {e}")
+        return None, None
+
+async def main():
+    logger.info(f"Listening to NATS topic: {NATS_TOPIC}")
+    logger.info("Waiting for face frames... Press Ctrl+C to stop.\n")
+
+    face_consumer = InputLayerConsumer(
         topic=NATS_TOPIC,
         broker=NATS_BROKER
     )
-    
-    kafka = OutputLayerProducer(
+    kafka_producer = OutputLayerProducer(
         broker=KAFKA_BROKER
     )
     
-    use_nats = await try_nats_queue(consumer,3.0)
-    camera = None
-    if use_nats:
+    async def handle_face_frame(input_result: InputResultWrapper):
         try:
-            while True:
-                await consumer.consume(onFrame=handle_message)
-        except KeyboardInterrupt:
-            print("Interrupted by user")
-        finally:
-            await consumer.disconnect()
-            await kafka.disconnect()
-
-    else:
-        executor = ThreadPoolExecutor(max_workers=1)
-        camera = cv2.VideoCapture(0)
-        if not camera.isOpened():
-            print("No NATS stream and no local camera found. Exiting.")
-            return
-        print("Using local camera for frames.")
-        try:
-            while True:
-                ret, frame = camera.read()
-                if not ret:
-                    print("Failed to read frame from camera. Exiting.")
-                    break
-                personID = "unknown"
-                result = await asyncio.get_event_loop().run_in_executor(executor, deepFaceDetection.analyze_frame, frame, personID)
-                meta = {"time_stamp":result.get('timestamp'), "source_id":"model_deepFace"}
-                await kafka.sendData(meta, result, 'model_deepFace')
-                try:
-                    print(json.dumps(result, default=str))
-                except Exception:
-                    print(result)
-
-                # visualization
-                if IS_VISUALIZE_ENABLED and result:
-                    vis = frame.copy()
-                    stable = result.get("stable_emotion")
-                    dom = result.get("dominant_emotion")
-                    age = result.get("age")
-                    gender = result.get("gender")
-                    text = f"ID:{personID} CURRENT:{dom} STABLE:{stable} AGE:{age} G:{gender}"
-                    cv2.putText(vis, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                    cv2.imshow("DeepFace - Live", vis)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        print("Quit requested.")
-                        break
-                    
-        except KeyboardInterrupt:
-            print("Interrupted by user")
-        finally:
-            kafka.disconnect()
-            if camera:
-                camera.release()
-            if IS_VISUALIZE_ENABLED:
-                cv2.destroyAllWindows()
+            msg = input_result.msg
+            face_img, metadata = decode_face_image(msg.data)
+            
+            if face_img is None:
+                logger.warning("Invalid or empty face frame received")
+                return
+            
+            face_id = metadata.get('face_id', 'unknown')
+            logger.info(f"Received face frame: {face_id}")
+            
+            result = deepFaceDetection.analyze_frame(face_img, face_id)
+            logger.info(f"[DeepFace] Analysis complete for {face_id}")
+            if IS_VISUALIZE_ENABLED and result:
+                vis = face_img.copy()
+                stable = result.get("stable_emotion", "N/A")
+                dom = result.get("dominant_emotion", "N/A")
+                age = result.get("age", "N/A")
+                gender = result.get("gender", "N/A")
+                text = f"ID:{face_id} CURRENT:{dom} STABLE:{stable} AGE:{age} G:{gender}"
+                cv2.putText(vis, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.imshow("DeepFace - Stream", vis)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    logger.info("Quit requested by user")
+                    raise KeyboardInterrupt()
+    
+            await kafka_producer.sendData(input_result, result, 'model_deepFace')
+            logger.info(f"DeepFace result sent to Kafka for {face_id}")
+            
+        except Exception as e:
+            logger.error(f"Error processing face frame: {e}", exc_info=True)
+    
+    try:
+        await face_consumer.connect()
+        logger.info("Connected to NATS")
+        await face_consumer.consume(onFrame=handle_face_frame)
+        while True:
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user")
+    except Exception as e:
+        logger.error(f"Connection failed: {e}", exc_info=True)
+    finally:
+        await face_consumer.disconnect()
+        await kafka_producer.producer.stop()
+        if IS_VISUALIZE_ENABLED:
+            cv2.destroyAllWindows()
+        logger.info("Shutdown complete")
 
 
 if __name__ == "__main__":

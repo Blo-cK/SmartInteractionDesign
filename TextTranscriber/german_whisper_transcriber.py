@@ -1,3 +1,4 @@
+"""NATS Producer: NATS Audio Chunks -> Text transcriber -> NATS"""
 import torch
 import numpy as np
 import whisper
