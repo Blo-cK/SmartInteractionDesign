@@ -29,12 +29,28 @@ from architecture.library.output_layer import OutputLayerProducer, OutputLayerRe
 # ============================================================================
 # KONFIGURATION - Hier können die zu konsumierenden Quellen konfiguriert werden
 # ============================================================================
+
+# Service Konfiguration
+SERVICE_ID = "human_description"
+KAFKA_BROKER = "152.53.32.66:9094"
+OLLAMA_URL = "http://localhost:11434"
+OLLAMA_MODEL = "qwen3-vl:4b"
+STORAGE_DIR = "descriptions"
+MAX_RETRIES = 3
+RETRY_DELAY = 1.0
+
 # Liste der Source-IDs, von denen Bilder konsumiert werden sollen
 # Beispiele: ["camera1"], ["camera1", "camera2"], ["webcam"]
 CONSUME_SOURCES = ["camera1"]  # Nur von camera1 konsumieren
 
 # Service-ID, von dem konsumiert wird (normalerweise "human_image_capture")
 CONSUME_SERVICE = "human_image_capture"
+
+# System Prompt für Ollama - definiert, was beschrieben werden soll
+SYSTEM_PROMPT = """Beschreibe diese Person kurz: 
+- Geschlecht und ungefähres Alter
+- Kleidung (Farben, Stil, Besonderheiten)
+- Auffällige Merkmale oder Accessoires."""
 # ============================================================================
 
 # Logging konfigurieren
@@ -50,15 +66,16 @@ class GwenHumanDescriptionService:
 
     def __init__(
         self,
-        service_id: str = "human_description",
-        kafka_broker: str = "152.53.32.66:9094",
-        ollama_url: str = "http://localhost:11434",
-        ollama_model: str = "qwen3-vl:4b",
-        storage_dir: str = "descriptions",
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
+        service_id: str = SERVICE_ID,
+        kafka_broker: str = KAFKA_BROKER,
+        ollama_url: str = OLLAMA_URL,
+        ollama_model: str = OLLAMA_MODEL,
+        storage_dir: str = STORAGE_DIR,
+        max_retries: int = MAX_RETRIES,
+        retry_delay: float = RETRY_DELAY,
         consume_sources: list = None,
-        consume_service: str = None
+        consume_service: str = None,
+        system_prompt: str = None
     ):
         """
         Args:
@@ -71,6 +88,7 @@ class GwenHumanDescriptionService:
             retry_delay: Wartezeit zwischen Wiederholungen (Sekunden)
             consume_sources: Liste der Source-IDs zum Konsumieren (Standard: CONSUME_SOURCES)
             consume_service: Service-ID zum Konsumieren (Standard: CONSUME_SERVICE)
+            system_prompt: System Prompt für Ollama (Standard: SYSTEM_PROMPT)
         """
         self.service_id = service_id
         self.kafka_broker = kafka_broker
@@ -82,6 +100,7 @@ class GwenHumanDescriptionService:
         # Verwende Konfigurationsvariablen als Standard
         self.consume_sources = consume_sources if consume_sources is not None else CONSUME_SOURCES
         self.consume_service = consume_service if consume_service is not None else CONSUME_SERVICE
+        self.system_prompt = system_prompt if system_prompt is not None else SYSTEM_PROMPT
 
         # Storage Setup
         self.storage_dir = Path(storage_dir)
@@ -100,11 +119,6 @@ class GwenHumanDescriptionService:
         # Output Layer Producer: Publiziere Beschreibungen
         self.producer = OutputLayerProducer(broker=self.kafka_broker)
 
-        # System Prompt für Ollama
-        self.system_prompt = """Beschreibe diese Person kurz: 
-        - Geschlecht und ungefähres Alter
-        - Kleidung (Farben, Stil, Besonderheiten)
-        - Auffällige Merkmale oder Accessoires."""
 
         # Statistiken
         self.stats = {
@@ -484,16 +498,8 @@ class GwenHumanDescriptionService:
 
 async def main():
     """Entry Point"""
-    # Service konfigurieren
-    service = GwenHumanDescriptionService(
-        service_id="human_description",
-        kafka_broker="152.53.32.66:9094",
-        ollama_url="http://localhost:11434",
-        ollama_model="qwen3-vl:4b",
-        storage_dir="descriptions",
-        max_retries=3,
-        retry_delay=1.0
-    )
+    # Service mit Standardwerten aus Konfiguration starten
+    service = GwenHumanDescriptionService()
 
     # Service starten
     await service.run()
