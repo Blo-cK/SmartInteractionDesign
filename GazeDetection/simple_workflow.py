@@ -3,8 +3,8 @@ import asyncio
 
 
 async def run_workflow():
-    from gaze_nats_producer import run_producer
-    from simple_consumer import run_consumer
+    from GazeDetection.face_extractor_producer import run_producer
+    from GazeDetection.simple_consumer_gaze import run_consumer
     
     print("🚀 Pipeline: Face Extractor → NATS → Gaze → Kafka (10 frames)")
     

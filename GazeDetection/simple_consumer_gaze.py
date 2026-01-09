@@ -15,8 +15,8 @@ from architecture.library.monitor_client import MonitorClient
 from gazedetection import GazeDetector
 
 
-async def check_producer_online(service_id="camera1", monitor_url="http://152.53.32.66:5000"):
-    """Check if face extractor producer service is online via MonitorClient"""
+async def check_producer_online(service_id="camera1_fullframe", monitor_url="http://152.53.32.66:5000"):
+    """Check if fullframe producer service is online via MonitorClient"""
     try:
         client = MonitorClient(base_url=monitor_url)
         status = client.get_online_status(service_id)
@@ -30,8 +30,8 @@ async def check_producer_online(service_id="camera1", monitor_url="http://152.53
 
 async def start_producer():
     """Start the producer as a subprocess"""
-    print("Starting face producer")
-    producer_path = os.path.join(os.path.dirname(__file__), "gaze_nats_producer.py")
+    print("Starting frame producer")
+    producer_path = os.path.join(os.path.dirname(__file__), "frame_producer.py")
     venv_python = os.path.join(os.path.dirname(__file__), "venv", "Scripts", "python.exe")
     
     # Start producer as background process using venv
@@ -40,22 +40,22 @@ async def start_producer():
         cwd=os.path.dirname(__file__),
         creationflags=subprocess.CREATE_NEW_CONSOLE
     )
-    print("Face extractor Producer started in new console (using venv)")
+    print("Frame producer started in new console (using venv)")
     await asyncio.sleep(10)  # Wait for producer to initialize
 
 
 async def run_consumer():
-    print("🔍 Checking if face extractor producer is online")
-    is_online = await check_producer_online("camera1")
+    print("🔍 Checking if frame producer is online")
+    is_online = await check_producer_online("camera1_fullframe")
     
     if not is_online:
-        print("Face extractor producer is not online -> starting it")
+        print("Frame producer is not online -> starting it")
         await start_producer()
     else:
-        print("Face extractor producer is online")
+        print("Frame producer is online")
     
     consumer = InputLayerConsumer(
-        topic="input.camera1.faceextractor",
+        topic="input.camera1.fullframe.gaze",
         broker="152.53.32.66:4222"
     )
     
@@ -73,52 +73,45 @@ async def run_consumer():
     
     async def handle_message(msg):
         # msg is InputResultWrapper, actual NATS message is in msg.msg
-        json_data = msg.msg.data
+        # InputLayerProducer sends raw JPEG bytes (not JSON)
+        frame_bytes = msg.msg.data
         
-        # Parse JSON data package
-        import base64
-        data_package = json.loads(json_data.decode('utf-8'))
+        # Get metadata from headers
+        headers = msg.msg.headers or {}
+        w = int(headers.get('width', 1920))
+        h = int(headers.get('height', 1080))
         
-        # Extract face image from base64
-        face_bytes = base64.b64decode(data_package['face_image'])
-        face_array = np.frombuffer(face_bytes, dtype=np.uint8)
-        face_img = cv2.imdecode(face_array, cv2.IMREAD_COLOR)
+        # Decode JPEG bytes → frame
+        nparr = np.frombuffer(frame_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
-        if face_img is None:
+        if frame is None:
+            print("⚠️ Failed to decode frame")
             return
         
-        # Extract metadata from data package
-        bbox_info = data_package.get('bbox', {})
-        frame_size = data_package.get('frame_size', {})
-        face_id = data_package.get('face_id', 'unknown')
+        # Detect ALL faces in frame and get their gaze => only return yaw pitch roll using fullframe
+        faces_data = gaze_detector.detect_gaze(frame, frame_width=w, frame_height=h)
         
-        bbox = None
-        if bbox_info:
-            bbox = (bbox_info['x'], bbox_info['y'],
-                   bbox_info['w'], bbox_info['h'])
+        if len(faces_data) == 0:
+            print("⚠️ No faces detected in frame")
+            return
         
-        # Get frame dimensions
-        w = frame_size.get('width', 1920)
-        h = frame_size.get('height', 1080)
+        # Send each detected face to Kafka
+        for face_data in faces_data:
+            result = {
+                'face_id': face_data['face_id'],
+                'gaze': {
+                    'pitch': face_data['pitch'],
+                    'yaw': face_data['yaw'],
+                    'roll': face_data['roll'],
+                }
+            }
+            
+            await kafka.sendData(msg, result, 'gaze_detector')
+            
+            print(f"{face_data['face_id']}: pitch={face_data['pitch']:.2f}°, yaw={face_data['yaw']:.2f}°, roll={face_data['roll']:.2f}° → Kafka")
         
-        # Gaze detection
-        gaze = gaze_detector.detect_gaze(face_img, bbox, w, h)
-        
-        # Send to Kafka
-        result = {
-            'face_id': face_id,
-            'bbox': bbox_info,
-            'frame_size': frame_size,
-            'gaze': gaze
-        }
-        
-        await kafka.sendData(msg, result, 'gaze_detector')
-        
-        # Get architecture metadata from headers
-        arch_meta = msg.msg.headers or {}
-        print(f"✅ {face_id}: pitch={gaze['pitch']}°, yaw={gaze['yaw']}° → Kafka")
-        print(f"📋 Architecture metadata: {arch_meta}")
-        count[0] += 1
+        count[0] += len(faces_data)
     
     # Use InputLayerConsumer.consume() as per README
     await consumer.consume(onFrame=handle_message)
