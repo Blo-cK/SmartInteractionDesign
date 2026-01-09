@@ -132,6 +132,12 @@ class HumanImageCaptureService:
         x1, y1, x2, y2 = person["bbox"]
         crop = person["frame"][y1:y2, x1:x2]
 
+        # Bildgröße prüfen
+        height, width = crop.shape[:2]
+        if width < 32 or height < 32:
+            print(f"⚠ Bild zu klein ({width}x{height}px) - {person['id']} wird nicht verarbeitet")
+            return
+
         # Lokal speichern
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         filename = f"{person['id']}_{timestamp}.jpg"
