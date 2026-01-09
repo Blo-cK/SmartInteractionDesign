@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from architecture.library.input_layer import InputLayerConsumer, InputResultWrapper
 from architecture.library.output_layer import OutputLayerProducer
 
-NATS_TOPIC = ".camera1.fullframe.gaze"
+NATS_TOPIC = "input.camera1.fullframe.gaze"
 NATS_BROKER = "152.53.32.66:4222"
 KAFKA_BROKER = "152.53.32.66:9094"
 
@@ -91,7 +91,7 @@ async def main():
                     logger.info("Quit requested by user")
                     raise KeyboardInterrupt()
     
-            await kafka_producer.sendData(input_result, result, 'model_deepFace')
+            await kafka_producer.sendData(input_result, result, 'face_emotion')
             logger.info(f"DeepFace result sent to Kafka for {face_id}")
             
         except Exception as e:
