@@ -59,11 +59,11 @@ wandb/
 *.pb
 
 # Spezifische große Modell-Dateien
-YoloE Object Detection/yoloe-11l-seg-pf.pt
-YoloE Object Detection/yoloe-11l-seg.pt
-YoloE Object Detection/yoloe-11s-seg-pf.pt
-YoloE Object Detection/yoloe-11s-seg.pt
-YoloE Object Detection/mobileclip_blt.ts
+Experiments with YoloE/yoloe-11l-seg-pf.pt
+Experiments with YoloE/yoloe-11l-seg.pt
+Experiments with YoloE/yoloe-11s-seg-pf.pt
+Experiments with YoloE/yoloe-11s-seg.pt
+Experiments with YoloE/mobileclip_blt.ts
 
 # Detektionsergebnisse / Outputs
 detections_*.csv
