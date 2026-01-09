@@ -41,6 +41,7 @@ class GermanEmotionClassifier:
         
         return {
             "emotion": top_emotion,
+            "text-input": text,
             "confidence": round(top_confidence, 4),
             "all": {k: round(v, 4) for k, v in emotion_scores.items()}
         }

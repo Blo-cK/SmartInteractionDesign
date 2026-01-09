@@ -11,7 +11,7 @@ from architecture.library.audio_grabber import AudioGrabber
 async def run_producer():
     """Send full micro chunks to NATS"""
     producer = InputLayerProducer(
-        source_name="microphone1.audio",
+        source_name="microphone1",
         service="audio",
         broker="152.53.32.66:4222"
     )

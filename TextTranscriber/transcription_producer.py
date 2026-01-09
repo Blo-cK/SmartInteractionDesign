@@ -51,7 +51,7 @@ async def send_transcription(producer, text, source_metadata):
     ).as_dict()
     
     await producer._send_message(json_bytes, metadata)
-    logger.info(f"📤 Transcribed & Sent: {text}")
+    logger.info(f"Transcribed & Sent: {text}")
 
 
 def decode_audio_chunk(audio_bytes, sample_rate=16000):
@@ -84,11 +84,11 @@ async def transcribe_audio_chunk(audio_bytes, metadata_dict):
 
 async def run_consumer_producer():
     audio_consumer = InputLayerConsumer(
-        topic="microphone1.audio",
+        topic="input.microphone1.audio",
         broker=NATS_BROKER
     )
     text_producer = InputLayerProducer(
-        source_name="microphone1",
+        source_name="audio1",
         service=SERVICE,
         broker=NATS_BROKER
     )

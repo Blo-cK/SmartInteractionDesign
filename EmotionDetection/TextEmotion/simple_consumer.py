@@ -5,8 +5,11 @@ from german_emotion_classifier import GermanEmotionClassifier
 import sys
 import os
 import logging
+from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add workspace root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from architecture.library.input_layer import InputLayerConsumer, InputResultWrapper
 from architecture.library.output_layer import OutputLayerProducer, OutputLayerMetadata
 
@@ -15,7 +18,7 @@ EMOTION_MODEL_NAME = "facebook/bart-large-mnli"
 USE_GPU = torch.cuda.is_available()
 device = torch.device("cuda" if USE_GPU else "cpu")
 
-NATS_TOPIC = "microphone1.text_transcriber" 
+NATS_TOPIC = "input.audio1.text_transcriber" 
 NATS_BROKER = "152.53.32.66:4222"
 KAFKA_BROKER = "152.53.32.66:9094"
 

@@ -1,8 +1,16 @@
+# ---- PyTorch CUDA wheels ----
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch
+torchvision
+torchaudio
+
+# ---- ML / image packages ----
+nats-py
+aiokafka
 deepface
 flask
 opencv-python-headless
 tensorflow
-torch
-torchvision
 numpy
 tf-keras
+opencv-python

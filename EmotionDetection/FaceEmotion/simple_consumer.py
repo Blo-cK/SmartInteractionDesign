@@ -8,12 +8,13 @@ import base64
 import logging
 import sys
 import os
+from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from architecture.library.input_layer import InputLayerConsumer, InputResultWrapper
 from architecture.library.output_layer import OutputLayerProducer
 
-NATS_TOPIC = "camera1.faceextractor"
+NATS_TOPIC = ".camera1.fullframe.gaze"
 NATS_BROKER = "152.53.32.66:4222"
 KAFKA_BROKER = "152.53.32.66:9094"
 
