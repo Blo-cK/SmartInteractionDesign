@@ -141,11 +141,12 @@ class WebcamFaceExtractor:
     """Main class for webcam face extraction with rolling frame buffer"""
     
     def __init__(self, frames_folder="frames", faces_folder="faces", 
-                 max_frames=100, capture_interval=1.0):
+                 max_frames=100, capture_interval=1.0, on_face_extracted=None):
         self.frames_folder = frames_folder
         self.faces_folder = faces_folder
         self.max_frames = max_frames
         self.capture_interval = capture_interval
+        self.on_face_extracted = on_face_extracted
         
         # Note: Directories should be created/cleared by the caller
         # before instantiating this class
@@ -267,6 +268,10 @@ class WebcamFaceExtractor:
                     print(f"💾 Saved face: {face_id}/{face_filename} "
                           f"({face_width}x{face_height})")
                     
+                    # Trigger callback immediately after extraction
+                    if self.on_face_extracted:
+                        self.on_face_extracted(face_path, meta_path, face_id)
+                    
         except Exception as e:
             print(f"Error extracting faces: {e}")
     
@@ -293,12 +298,20 @@ class WebcamFaceExtractor:
                     # Extract faces
                     self._extract_and_save_faces(frame, frame_filename)
                     
+                    # Delete frame after face extraction
+                    try:
+                        if os.path.exists(frame_path):
+                            os.remove(frame_path)
+                    except Exception as e:
+                        print(f"⚠️ Could not delete frame: {e}")
+                    
                     # Cleanup old frames
                     self._cleanup_old_frames()
                     
                     self.frame_counter += 1
                     # If we've reached the configured max frames, stop gracefully
-                    if self.frame_counter >= self.max_frames:
+                    # (skip check if max_frames is -1 for infinite capture)
+                    if self.max_frames > 0 and self.frame_counter >= self.max_frames:
                         print("⏭️ Reached max frames: "
                               f"{self.frame_counter}/{self.max_frames}."
                               " Stopping capture.")

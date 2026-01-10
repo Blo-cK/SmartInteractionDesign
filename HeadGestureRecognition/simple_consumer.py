@@ -147,6 +147,14 @@ async def run_consumer():
             if confidence is not None:
                 confidence = float(confidence)
 
+
+            # Safe face_image as images in a folder
+            
+            save_folder = "saved_faces"
+            os.makedirs(save_folder, exist_ok=True)
+            face_filename = os.path.join(save_folder, f"{face_id}.png")
+            cv2.imwrite(face_filename, face_img)
+
             # --------------------------------------------
             # Prepare Kafka result
             # --------------------------------------------
