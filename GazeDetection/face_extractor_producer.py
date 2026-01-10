@@ -97,7 +97,7 @@ async def run_producer(num_frames=-1):
         frames_folder=frames_folder,
         faces_folder=faces_folder,
         max_frames=num_frames,
-        capture_interval=0.1,
+        capture_interval=0.01,
         on_face_extracted=on_face_extracted
     )
     

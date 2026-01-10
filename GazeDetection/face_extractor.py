@@ -332,11 +332,14 @@ class WebcamFaceExtractor:
                     try:
                         if os.path.exists(frame_path):
                             os.remove(frame_path)
+                            # Remove from tracking list since we deleted it immediately
+                            if frame_filename in self.saved_frames:
+                                self.saved_frames.remove(frame_filename)
                     except Exception as e:
                         print(f"⚠️ Could not delete frame: {e}")
                     
-                    # Cleanup old frames
-                    self._cleanup_old_frames()
+                    # Cleanup old frames (only needed if frames weren't deleted immediately)
+                    # self._cleanup_old_frames()
                     
                     self.frame_counter += 1
                     # if non infinite mode
