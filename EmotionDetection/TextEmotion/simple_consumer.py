@@ -1,126 +1,94 @@
 import asyncio
 import torch
-import wave
-import numpy as np
-from datetime import datetime
-from german_whisper_transcriber import GermanWhisperTranscriber
+import json
 from german_emotion_classifier import GermanEmotionClassifier
 import sys
 import os
+import logging
+from pathlib import Path
 
-SAMPLE_RATE = 16000
-CHUNK_DURATION = 10.0  # seconds
-CHUNK_SIZE = int(SAMPLE_RATE * CHUNK_DURATION)
+# Add workspace root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from architecture.library.input_layer import InputLayerConsumer
+from architecture.library.input_layer import InputLayerConsumer, InputResultWrapper
 from architecture.library.output_layer import OutputLayerProducer
+from architecture.library.monitor_client import MonitorClient
 
-WHISPER_MODEL_SIZE = "medium"  # Options: tiny, base, small, medium, large
-EMOTION_MODEL_NAME = "facebook/bart-large-mnli"  
+EMOTION_MODEL_NAME = "facebook/bart-large-mnli"
 
-
-LANGUAGE = "de"
 USE_GPU = torch.cuda.is_available()
 device = torch.device("cuda" if USE_GPU else "cpu")
 
-NATS_TOPIC="audio_microphone"
-NATS_BROKER="152.53.32.66:4222"
-KAFKA_BROKER="152.53.32.66:9094"
+NATS_TOPIC = "input.audio1.text_transcriber" 
+NATS_BROKER = "152.53.32.66:4222"
+KAFKA_BROKER = "152.53.32.66:9094"
 
-print("Initializing models...")
-transcriber = GermanWhisperTranscriber(model_size=WHISPER_MODEL_SIZE, device="cuda" if USE_GPU else "cpu")
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info("Initializing emotion classification model...")
 emotion_classifier = GermanEmotionClassifier(model_name=EMOTION_MODEL_NAME)
-print("Models initialized successfully.")
-
 DEBUG_MODE = True
 
-async def try_nats_queue(consumer,timeout=1.0):
+async def extract_text_from_message(msg_data):
+    """Extract text from NATS message"""
     try:
-        await asyncio.wait_for(consumer.connect(),timeout)
-        print("Connected to nats stream")
-        return True
-    except asyncio.TimeoutError:
-        return False
-
-async def save_wav(filename: str, audio: np.ndarray):
-    with wave.open(filename, "wb") as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)  # 16-bit audio
-        wf.setframerate(SAMPLE_RATE)
-        wf.writeframes((audio * 32767).astype(np.int16).tobytes())
-
-async def transcribe_audio(audio):
-    print("[Transcription] Processing audio...")
-    try:
-        text = transcriber.transcribe(audio, sample_rate=SAMPLE_RATE, language=LANGUAGE)
-        if text and text.strip():
-            print(f"[Transcription]: '{text}'")
-            return text
-        else:
-            print("[Transcription] No speech detected in audio chunk.")
-            return None
+        json_data = json.loads(msg_data.decode('utf-8'))
+        return json_data.get('text', None)
     except Exception as e:
-        print(f"[Transcription] Error: {e}")
+        logger.error(f"Error parsing message: {e}")
         return None
 
 
 async def main():
-    os.makedirs("./temp", exist_ok=True)
+    logger.info(f"Device: {device} (GPU: {'Enabled' if USE_GPU else 'Disabled'})")
+    logger.info(f"Emotion model: {EMOTION_MODEL_NAME}")
+    logger.info(f"Listening to NATS topic: {NATS_TOPIC}")
 
-    print(f"Device: {device} (GPU: {'Enabled' if USE_GPU else 'Disabled'})")
-    print(f"Whisper model: {WHISPER_MODEL_SIZE}")
-    print(f"Emotion model: {EMOTION_MODEL_NAME}")
-    print(f"Chunk duration: {CHUNK_DURATION}s")
-    print(f"NATS topic: {NATS_TOPIC}")
-    print(f"Kafka broker: {KAFKA_BROKER}")
-    print("="*60)
-    print("🎧 Listening for audio... Press Ctrl+C to stop.\n")
-    async def handle_message(msg):
-        audio = msg.astype(np.float32)
-        if len(audio) < SAMPLE_RATE * CHUNK_DURATION:
-            return
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        wav_name = f"chunk_{timestamp}.wav"
-        wav_path = f"./temp/{wav_name}"
-        save_wav(wav_path, audio)
-        text = await transcribe_audio(audio)
-        if text == None:
-            return
-        
-        # Detect emotion using transformer model
-        emotion_result = emotion_classifier.predict(text)
-        
-        # Enhanced logging with all emotion scores
-        print(f"[Emotion] Detected: {emotion_result['emotion']} (confidence: {emotion_result['confidence']:.2f})")
-        if DEBUG_MODE:
-            print(f"[Emotion] All scores: {emotion_result['all']}")
-        
-        # Send to Kafka
-        await kafka.sendData(msg.headers, emotion_result, 'model_emotion_text')
-    
-    consumer = InputLayerConsumer(
+    logger.info("Waiting for transcribed text... Press Ctrl+C to stop.\n")
+    text_consumer = InputLayerConsumer(
         topic=NATS_TOPIC,
         broker=NATS_BROKER
     )
-    
-    kafka = OutputLayerProducer(
+    kafka_producer = OutputLayerProducer(
         broker=KAFKA_BROKER
     )
-    
-    use_nats = await try_nats_queue(consumer,3.0)
-    if use_nats:
+    async def handle_transcribed_text(input_result):
+        try:
+            msg = input_result.msg
+            text = await extract_text_from_message(msg.data)
+            
+            if text is None or text.strip() == "":
+                logger.warning("Empty or invalid text received")
+                return
+            
+            logger.info(f"Received text: '{text}'")
+            emotion_result = emotion_classifier.predict(text)
+            logger.info(f"[Emotion] Detected: {emotion_result['emotion']} (confidence: {emotion_result['confidence']:.2f})")
+            # if DEBUG_MODE:
+                # logger.debug(f"[Emotion] All scores: {emotion_result['all']}")
+            await kafka_producer.sendData(input_result, emotion_result, 'text_emotion')
+            logger.info(f"Emotion result sent to Kafka")
+            
+        except Exception as e:
+            logger.error(f"Error processing text: {e}", exc_info=True)
+
+    try:
+        await text_consumer.connect()
+        await text_consumer.consume(onFrame=handle_transcribed_text)
         try:
             while True:
-                await consumer.consume(onFrame=handle_message)
+                await asyncio.sleep(1)
         except KeyboardInterrupt:
-            print("Interrupted by user")
-        finally:
-            await consumer.disconnect()
-            await kafka.disconnect()
-
-    else:
-        print("Try running main.py")
+            logger.info("Interrupted by user")
+    except Exception as e:
+        logger.error(f"Connection failed: {e}", exc_info=True)
+    finally:
+        await text_consumer.disconnect()
+        await kafka_producer.producer.stop()
+        logger.info("Shutdown complete")
 
 
 if __name__ == "__main__":

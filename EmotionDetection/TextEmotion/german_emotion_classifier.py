@@ -34,19 +34,14 @@ class GermanEmotionClassifier:
                 "confidence": 1.0,
                 "all": {label: (1.0 if label == "neutral" else 0.0) for label in self.emotion_labels}
             }
-        
-        # Classify emotion using zero-shot classification
         result = self.classifier(text[:512], self.emotion_labels)
-        
-        # Parse results - the classifier returns labels and scores in order
         emotion_scores = dict(zip(result['labels'], result['scores']))
-        
-        # Get top emotion
         top_emotion = result['labels'][0]
         top_confidence = float(result['scores'][0])
         
         return {
             "emotion": top_emotion,
+            "text": text,
             "confidence": round(top_confidence, 4),
-            "all": {k: round(v, 4) for k, v in emotion_scores.items()}
+            # "all": {k: round(v, 4) for k, v in emotion_scores.items()}
         }

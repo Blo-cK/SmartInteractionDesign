@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 import sounddevice as sd
 import os
-from german_whisper_transcriber import GermanWhisperTranscriber
+from TextTranscriber.german_whisper_transcriber import GermanWhisperTranscriber
 from german_emotion_classifier import GermanEmotionClassifier
 
 SAMPLE_RATE = 16000

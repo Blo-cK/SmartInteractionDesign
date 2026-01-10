@@ -4,12 +4,13 @@ torch
 torchvision
 torchaudio
 
-# ---- ML / audio packages ----
+# ---- ML / image packages ----
 nats-py
 aiokafka
-transformers
+deepface
+flask
+opencv-python-headless
+tensorflow
 numpy
-soundfile
-sounddevice
-sentencepiece
+tf-keras
 opencv-python
