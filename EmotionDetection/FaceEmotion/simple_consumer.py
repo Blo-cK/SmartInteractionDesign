@@ -18,7 +18,7 @@ NATS_TOPIC = "input.camera1.fullframe.gaze"
 NATS_BROKER = "152.53.32.66:4222"
 KAFKA_BROKER = "152.53.32.66:9094"
 
-IS_VISUALIZE_ENABLED = True  # set False to disable cv2 window
+IS_VISUALIZE_ENABLED = False  # set False to disable cv2 window
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -64,7 +64,7 @@ async def main():
         broker=KAFKA_BROKER
     )
     
-    async def handle_face_frame(input_result: InputResultWrapper):
+    async def handle_face_frame(input_result):
         try:
             msg = input_result.msg
             face_img, metadata = decode_face_image(msg.data)
