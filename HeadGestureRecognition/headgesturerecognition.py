@@ -107,23 +107,23 @@ class HeadGestureRecognition:
     # --------------------------------------------------------------
     # Webcam demo function (equivalent to original main loop)
     # --------------------------------------------------------------
-    # def run_webcam(self, cam_id=0):
-    #     """Starts the webcam and displays live detection results."""
-    #     vid = cv2.VideoCapture(cam_id)
+    def run_webcam(self, cam_id=0):
+        """Starts the webcam and displays live detection results."""
+        vid = cv2.VideoCapture(cam_id)
 
-    #     while True:
-    #         ret, frame = vid.read()
-    #         if not ret:
-    #             break
+        while True:
+            ret, frame = vid.read()
+            if not ret:
+                break
 
-    #         annotated_frame, gesture_output = self.process_frame(frame)
-    #         print("[INFO] Gesture output:", gesture_output.keys())
-    #         print("[INFO] Gesture output:", gesture_output.values())
-    #         print("[INFO] Gesture output:", gesture_output.items())
-    #         cv2.imshow("Head Gesture Demo", annotated_frame)
+            gesture_output = self.process_frame(frame)
+            # print("[INFO] Gesture output:", gesture_output.keys())
+            # print("[INFO] Gesture output:", gesture_output.values())
+            print("[INFO] Gesture output:", gesture_output.items())
+            # cv2.imshow("Head Gesture Demo", annotated_frame)
 
-    #         if cv2.waitKey(1) & 0xFF == ord("q"):
-    #             break
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
-    #     vid.release()
-    #     cv2.destroyAllWindows()
+        vid.release()
+        cv2.destroyAllWindows()
