@@ -29,7 +29,7 @@ async def check_producer_online(service_id="camera1", monitor_url="http://152.53
 
 
 async def start_producer():
-    """Start the producer as a subprocess"""
+    """Start the producer as a subprocess (only with venv working on windows)"""
     print("Starting frame producer")
     producer_path = os.path.join(os.path.dirname(__file__), "face_extractor_producer.py")
     venv_python = os.path.join(os.path.dirname(__file__), "venv", "Scripts", "python.exe")
@@ -45,7 +45,7 @@ async def start_producer():
 
 
 async def run_consumer():
-    print("🔍 Checking if frame producer is online")
+    print("Checking if frame producer is online")
     is_online = await check_producer_online("camera1")
     
     if not is_online:
@@ -64,11 +64,11 @@ async def run_consumer():
     )
     
     gaze_detector = GazeDetector()
-    print("🔧 Gaze Detector loaded")
+    print("🔧 Gaze Detector (FaceExtractor Interface) loaded")
     
     await consumer.connect()
     
-    print("🎯 Processing faces...")
+    print("Processing faces...")
     count = [0]
     
     async def handle_message(msg):
@@ -124,7 +124,7 @@ async def run_consumer():
         bbox_w = bbox_info.get('w', w)
         bbox_h = bbox_info.get('h', h)
         
-        # Transform: cropped position (0-1) → bbox position → frame position (0-1)
+        # Transform: cropped position (0-1) -> bbox position -> frame position (0-1)
         frame_head_x = (bbox_x + crop_head_pos['x'] * bbox_w) / w
         frame_head_y = (bbox_y + crop_head_pos['y'] * bbox_h) / h
         
@@ -133,7 +133,7 @@ async def run_consumer():
             'y': round(frame_head_y, 4)
         }
         
-        # Send to Kafka
+        # Send to Kafka (only for debugging/demo => not really used later (is merged into GazeDetector of simple_consumer_gaze))
         result = {
             'person_id': face_id,
             'head_position': head_position,
