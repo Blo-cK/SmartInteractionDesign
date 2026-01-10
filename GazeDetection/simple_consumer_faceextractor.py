@@ -64,7 +64,7 @@ async def run_consumer():
     )
     
     gaze_detector = GazeDetector()
-    print("🔧 Gaze Detector (FaceExtractor Interface) loaded")
+    print("Gaze Detector (FaceExtractor Interface) loaded")
     
     await consumer.connect()
     
@@ -80,13 +80,13 @@ async def run_consumer():
         try:
             data_package = json.loads(json_data.decode('utf-8'))
         except Exception as e:
-            print(f"⚠️ Failed to parse JSON: {e}")
+            print(f"Failed to parse JSON: {e}")
             return
         
         # Extract face image from base64
         face_image_b64 = data_package.get('face_image')
         if not face_image_b64:
-            print("⚠️ No face_image in data")
+            print("No face_image in data")
             return
         
         face_bytes = base64.b64decode(face_image_b64)
@@ -94,7 +94,7 @@ async def run_consumer():
         face_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if face_img is None:
-            print("⚠️ Failed to decode face image")
+            print("Failed to decode face image")
             return
         
         # Get metadata
@@ -109,7 +109,7 @@ async def run_consumer():
         faces_data = gaze_detector.detect_gaze(face_img, frame_width=w, frame_height=h)
         
         if len(faces_data) == 0:
-            print(f"⚠️ No face detected for {face_id}")
+            print(f"No face detected for {face_id}")
             return
         
         # Use first detected face (should only be one in crop)
@@ -142,7 +142,7 @@ async def run_consumer():
         
         await kafka.sendData(msg, result, 'gaze_detector_faceextractor')
         
-        print(f"✅ {face_id}: head_position x={head_position['x']:.4f}, y={head_position['y']:.4f} (frame coords) → Kafka")
+        print(f"{face_id}: head_position x={head_position['x']:.4f}, y={head_position['y']:.4f} (frame coords) → Kafka")
         
         count[0] += 1
     
@@ -154,7 +154,7 @@ async def run_consumer():
         while True:
             await asyncio.sleep(1)
     except KeyboardInterrupt:
-        print(f"\n🛑 Stopping consumer... Processed {count[0]} faces")
+        print(f"\nStopping consumer... Processed {count[0]} faces")
         await consumer.disconnect()
         await kafka.disconnect()
 

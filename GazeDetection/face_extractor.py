@@ -10,7 +10,7 @@ from PIL import Image
 
 
 class FaceRecognitionTracker:
-    """Robust face recognition system using deep learning models"""
+    """face recognition system using deep learning models"""
     
     def __init__(self, similarity_threshold=0.6, timeout_seconds=60):
         self.known_faces = {}  # {face_id: {'encodings': [...], 'last_seen': timestamp}}
@@ -37,7 +37,7 @@ class FaceRecognitionTracker:
                 # Return the first (and usually only) face encoding
                 return face_encodings[0]
             else:
-                print("⚠️ No face encodings found in image")
+                print("No face encodings found in image")
                 return None
                 
         except Exception as e:
@@ -83,10 +83,10 @@ class FaceRecognitionTracker:
         
         # Show detailed distances for debugging
         for face_id, distances in face_distances.items():
-            print(f"🔍 {face_id}: min_dist={distances['min_distance']:.3f}, "
+            print(f"{face_id}: min_dist={distances['min_distance']:.3f}, "
                   f"avg_dist={distances['avg_distance']:.3f}")
         
-        print(f"🎯 Best match: {best_match_id} "
+        print(f"Best match: {best_match_id} "
               f"(distance: {best_distance:.3f}, threshold: "
               f"{self.similarity_threshold})")
         
@@ -99,7 +99,7 @@ class FaceRecognitionTracker:
             if len(self.known_faces[best_match_id]['encodings']) > 5:
                 self.known_faces[best_match_id]['encodings'].pop(0)
                 
-            print(f"✅ Matched to existing person: {best_match_id}")
+            print(f"Matched to existing person: {best_match_id}")
             return best_match_id
         else:
             # New face
@@ -109,7 +109,7 @@ class FaceRecognitionTracker:
                 'last_seen': current_time
             }
             self.face_counter += 1
-            print(f"✨ New person detected: {new_face_id} "
+            print(f"New person detected: {new_face_id} "
                   f"(distance to closest: {best_distance:.3f})")
             return new_face_id
     
@@ -122,7 +122,7 @@ class FaceRecognitionTracker:
         
         for face_id in to_remove:
             del self.known_faces[face_id]
-            print(f"🗑️ Removed old face ID: {face_id}")
+            print(f"Removed old face ID: {face_id}")
     
 
 class WebcamFaceExtractor:
@@ -152,7 +152,7 @@ class WebcamFaceExtractor:
         for folder in [self.frames_folder, self.faces_folder]:
             if not os.path.exists(folder):
                 os.makedirs(folder)
-                print(f"📁 Created directory: {folder}")
+                print(f"Created directory: {folder}")
     
     def reset_directories(self):
         """Clean existing directories for fresh start"""
@@ -161,14 +161,14 @@ class WebcamFaceExtractor:
         for folder in [self.frames_folder, self.faces_folder]:
             if os.path.exists(folder):
                 shutil.rmtree(folder)
-                print(f"🗑️ Cleaned directory: {folder}")
+                print(f"Cleaned directory: {folder}")
         
         self._create_directories()
         
     def _cleanup_old_frames(self):
         """Remove oldest frames if we exceed max_frames"""
         try:
-            # Remove oldest frames while we have more than max_frames
+            # Remove oldest frames
             while len(self.saved_frames) > self.max_frames:
                 old_frame = self.saved_frames.pop(0)
                 frame_path = os.path.join(self.frames_folder, old_frame)
@@ -176,7 +176,7 @@ class WebcamFaceExtractor:
                 try:
                     if os.path.exists(frame_path):
                         os.remove(frame_path)
-                        print(f"🗑️ Removed old frame: {old_frame}")
+                        print(f"Removed old frame: {old_frame}")
                 except Exception as e:
                     print(f"Error removing frame {old_frame}: {e}")
         except Exception as e:
@@ -190,7 +190,7 @@ class WebcamFaceExtractor:
             
             # Check frame dtype and convert if needed
             if frame.dtype != np.uint8:
-                print(f"⚠️ Converting frame dtype from {frame.dtype} to uint8")
+                print(f"Converting frame dtype from {frame.dtype} to uint8")
                 if frame.dtype == np.uint16:
                     # Convert 16-bit to 8-bit
                     frame = cv2.convertScaleAbs(frame, alpha=255.0/65535.0)
@@ -204,32 +204,32 @@ class WebcamFaceExtractor:
             # Check number of channels
             if len(frame.shape) == 2:
                 # Grayscale - convert to BGR
-                print(f"⚠️ Converting grayscale to BGR")
+                print(f"Converting grayscale to BGR")
                 frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
             elif len(frame.shape) == 3:
                 channels = frame.shape[2]
                 if channels == 4:
                     # RGBA or BGRA - convert to BGR
-                    print(f"⚠️ Converting RGBA/BGRA ({channels} channels) to BGR")
+                    print(f"Converting RGBA/BGRA ({channels} channels) to BGR")
                     frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
                 elif channels != 3:
                     # Unexpected number of channels
-                    print(f"⚠️ Unexpected {channels} channels, attempting conversion")
+                    print(f"Unexpected {channels} channels, attempting conversion")
                     frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
             
             return frame
             
         except Exception as e:
-            print(f"❌ Error normalizing frame format: {e}")
+            print(f"Error normalizing frame format: {e}")
             return None
     
     def _extract_and_save_faces(self, frame, frame_filename):
-        """Extract faces from frame using robust face detection and save with IDs"""
+        """Extract faces from frame using face detection and save with IDs"""
         try:
             # Normalize frame format for compatibility with different cameras
             frame = self._normalize_frame_format(frame)
             if frame is None:
-                print("⚠️ Skipping frame due to format normalization error")
+                print("Skipping frame due to format normalization error")
                 return
             
             # Convert BGR to RGB for face_recognition
@@ -273,7 +273,7 @@ class WebcamFaceExtractor:
                     person_folder = os.path.join(self.faces_folder, face_id)
                     if not os.path.exists(person_folder):
                         os.makedirs(person_folder)
-                        print(f"📁 Created folder for {face_id}")
+                        print(f"Created folder for {face_id}")
                     
                     # Save face image
                     face_filename = f"{timestamp}_{i:02d}.jpg"
@@ -295,7 +295,7 @@ class WebcamFaceExtractor:
                     with open(meta_path, 'w') as f:
                         json.dump(metadata, f)
                     
-                    print(f"💾 Saved face: {face_id}/{face_filename} "
+                    print(f"Saved face: {face_id}/{face_filename} "
                           f"({face_width}x{face_height})")
                     
                     # Trigger callback immediately after extraction
@@ -307,7 +307,7 @@ class WebcamFaceExtractor:
     
     def _capture_loop(self):
         """Main capture loop"""
-        print(f"🎥 Starting capture loop (interval: {self.capture_interval}s)")
+        print(f"Starting capture loop (interval: {self.capture_interval}s)")
         
         while self.is_running:
             try:
@@ -323,7 +323,7 @@ class WebcamFaceExtractor:
                     cv2.imwrite(frame_path, frame)
                     self.saved_frames.append(frame_filename)
                     
-                    print(f"📸 Captured frame: {frame_filename}")
+                    print(f"Captured frame: {frame_filename}")
                     
                     # Extract faces
                     self._extract_and_save_faces(frame, frame_filename)
@@ -336,7 +336,7 @@ class WebcamFaceExtractor:
                             if frame_filename in self.saved_frames:
                                 self.saved_frames.remove(frame_filename)
                     except Exception as e:
-                        print(f"⚠️ Could not delete frame: {e}")
+                        print(f"Could not delete frame: {e}")
                     
                     # Cleanup old frames (only needed if frames weren't deleted immediately)
                     # self._cleanup_old_frames()
@@ -344,13 +344,13 @@ class WebcamFaceExtractor:
                     self.frame_counter += 1
                     # if non infinite mode
                     if self.max_frames > 0 and self.frame_counter >= self.max_frames:
-                        print("⏭️ Reached max frames: "
+                        print("Reached max frames: "
                               f"{self.frame_counter}/{self.max_frames}."
                               " Stopping capture.")
                         self._on_max_frames_reached()
                         break
                 else:
-                    print("❌ Failed to capture frame")
+                    print("Failed to capture frame")
                 
                 # Wait for next capture
                 time.sleep(self.capture_interval)
@@ -362,14 +362,14 @@ class WebcamFaceExtractor:
     def start_capture(self, camera_index=0):
         """Start webcam capture"""
         if self.is_running:
-            print("⚠️ Capture already running")
+            print("Capture already running")
             return
         
         # Initialize camera
         self.cap = cv2.VideoCapture(camera_index)
         
         if not self.cap.isOpened():
-            print(f"❌ Could not open camera {camera_index}")
+            print(f"Could not open camera {camera_index}")
             return
         
         # Set camera properties
@@ -399,8 +399,6 @@ class WebcamFaceExtractor:
         if not self.is_running:
             print("Capture not running")
             return
-        
-        print("Stopping capture...")
         self.is_running = False
         
         # Wait for thread to finish (fail safe)
@@ -427,53 +425,3 @@ class WebcamFaceExtractor:
                     pass
         except Exception as e:
             print(f"Error in auto-stop handler: {e}")
-    
-    def start(frames_folder="frames",
-            faces_folder="faces",
-            max_frames=100,  # Keep only 100 most recent frames
-            capture_interval=2.0  # Capture every 2 seconds
-        ):
-        
-        # Clear existing directories first
-        import shutil
-        
-        folders_to_clear = [frames_folder, faces_folder]
-        print("🔄 Clearing directories for fresh start...")
-        
-        for folder in folders_to_clear:
-            if os.path.exists(folder):
-                shutil.rmtree(folder)
-                print(f"🗑️ Cleaned directory: {folder}")
-            os.makedirs(folder, exist_ok=True)
-            print(f"📁 Created directory: {folder}")
-        
-        print("✅ Directories cleared and ready")
-        
-        # Create face extractor
-        extractor = WebcamFaceExtractor(
-            frames_folder=frames_folder,
-            faces_folder=faces_folder,
-            max_frames=max_frames,
-            capture_interval=capture_interval
-        )
-        
-        try:
-            # Start capture
-            extractor.start_capture(camera_index=0)
-            
-            print("\nSystem running...")
-            print(" Capturing frames every 2 seconds")
-            print(" Extracting and recognizing faces")
-            print(" Organizing faces by person ID")
-            print(" Maintaining rolling buffer of 100 frames")
-            print("\nPress Ctrl+C to stop...")
-            
-            # Keep main thread alive until capture stops or interrupted
-            while extractor.is_running:
-                time.sleep(10)
-        except KeyboardInterrupt:
-            print("\n⚠️ Interrupted by user")
-            
-        finally:
-            extractor.stop_capture()
-            print("👋 Program terminated")

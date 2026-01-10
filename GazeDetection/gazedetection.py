@@ -8,14 +8,14 @@ try:
     MEDIAPIPE_AVAILABLE = True
 except ImportError:
     MEDIAPIPE_AVAILABLE = False
-    print("⚠️ MediaPipe not installed. Install with: pip install mediapipe")
+    print("MediaPipe not installed. Install with: pip install mediapipe")
 
 class GazeDetector:
     def __init__(self, model_path=None):
         """Initialize gaze detector with MediaPipe Face Landmarker"""
         
         if not MEDIAPIPE_AVAILABLE:
-            print("⚠️ MediaPipe not available, gaze detection will return dummy values")
+            print("MediaPipe not available")
             self.detector = None
             return
         
@@ -37,10 +37,7 @@ class GazeDetector:
         
         # Check if model exists
         if not os.path.exists(model_path):
-            print(f"⚠️ Model not found at {model_path}")
-            print("Expected locations:")
-            print("  1. GazeDetection/models/face_landmarker.task")
-            print("  2. HeadGestureRecognition/src/model_checkpoints/face_landmarker_v2_with_blendshapes.task")
+            print(f"Model not found at {model_path}")
             self.detector = None
             return
         
@@ -60,7 +57,7 @@ class GazeDetector:
         )
         
         self.detector = FaceLandmarker.create_from_options(options)
-        print(f"✅ MediaPipe Face Landmarker loaded from {model_path}")
+        print(f"MediaPipe Face Landmarker loaded from {model_path}")
     
     def detect_gaze(self, frame, face_bbox=None, frame_width=None, frame_height=None):
         """
@@ -72,7 +69,7 @@ class GazeDetector:
             frame_height: Auto-detected from frame
             
         Returns:
-            dict with pitch, yaw, roll, head_position for each detected face (different values for the different use cases)
+            dict with pitch, yaw, roll, head_position for each detected face
         """
         
         if self.detector is None:
@@ -88,7 +85,7 @@ class GazeDetector:
         if frame_height is None:
             frame_height = h
         
-        print(f"🔍 Processing frame: {w}x{h}, dtype={frame_rgb.dtype}")
+        print(f"Processing frame: {w}x{h}, dtype={frame_rgb.dtype}")
         
         # Create MediaPipe Image
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
@@ -97,18 +94,17 @@ class GazeDetector:
             # Actually run the detection!
             result = self.detector.detect(mp_image)
             
-            print(f"📊 MediaPipe result: {len(result.facial_transformation_matrixes)} faces, {len(result.face_landmarks)} landmarks")
+            print(f"MediaPipe result: {len(result.facial_transformation_matrixes)} faces, {len(result.face_landmarks)} landmarks")
             
             # Check if we have landmarks but no transformation matrices
             if len(result.face_landmarks) > 0 and len(result.facial_transformation_matrixes) == 0:
-                print("⚠️ MediaPipe: Detected landmarks but no transformation matrix")
-                print("    This usually means face detection confidence is too low or lighting is poor")
-                # Try to compute pose from landmarks using solvePnP
+                print("MediaPipe: Detected landmarks but no transformation matrix => using fallback")
+                # Try to compute pose from landmarks using solvePnP (Fallback)
                 return self._estimate_pose_from_landmarks(result.face_landmarks, w, h)
             
             if len(result.facial_transformation_matrixes) == 0:
                 # No faces detected at all
-                print("⚠️ MediaPipe: No faces detected in frame")
+                print("MediaPipe: No faces detected in frame")
                 return []
             
             # Process all detected faces
@@ -139,7 +135,7 @@ class GazeDetector:
             return faces_data
             
         except Exception as e:
-            print(f"⚠️ MediaPipe error: {e}")
+            print(f"MediaPipe error: {e}")
             return []
     
     def _estimate_pose_from_landmarks(self, face_landmarks_list, img_w, img_h):
@@ -207,32 +203,10 @@ class GazeDetector:
         
         return faces_data
     
-    def detect_gaze_legacy(self, face_image, face_bbox=None, frame_width=1920, frame_height=1080):
-        """Legacy method for backward compatibility with cropped faces"""
-        
-        # Calculate head position (normalized 0-1)
-        head_position = None
-        if face_bbox is not None:
-            x, y, w, h = face_bbox
-            center_x = (x + w / 2) / frame_width
-            center_y = (y + h / 2) / frame_height
-            head_position = {
-                "x": round(center_x, 4),
-                "y": round(center_y, 4)
-            }
-        
-        return {
-            "pitch": round(pitch, 2),
-            "yaw": round(yaw, 2),
-            "roll": round(roll, 2),
-            "head_position": head_position
-        }
     
     def _matrix_to_euler(self, rotation_matrix):
         """Convert rotation matrix to Euler angles (pitch, yaw, roll) in degrees
-        
-        Args:
-            rotation_matrix: Either 3x3 (from solvePnP) or 4x4 (from MediaPipe)
+            (from MediaPipe or solvePnP)
         """
         # Check if it's a 3x3 or 4x4 matrix
         if rotation_matrix.size == 9:

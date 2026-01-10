@@ -45,7 +45,7 @@ async def start_producer():
 
 
 async def run_consumer():
-    print("🔍 Checking if frame producer is online")
+    print("Checking if fullframe producer is online")
     is_online = await check_producer_online("camera1.fullframe")
     
     if not is_online:
@@ -64,11 +64,11 @@ async def run_consumer():
     )
     
     gaze_detector = GazeDetector()
-    print("🔧 Gaze Detector loaded")
+    print("Gaze Detector loaded")
     
     await consumer.connect()
     
-    print("🎯 Processing faces...")
+    print("Processing faces...")
     count = [0]
     
     async def handle_message(msg):
@@ -86,14 +86,14 @@ async def run_consumer():
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if frame is None:
-            print("⚠️ Failed to decode frame")
+            print("Failed to decode frame")
             return
         
         # Detect ALL faces in frame and get their gaze => only return yaw pitch roll using fullframe
         faces_data = gaze_detector.detect_gaze(frame, frame_width=w, frame_height=h)
         
         if len(faces_data) == 0:
-            print("⚠️ No faces detected in frame")
+            print("No faces detected in frame")
             return
         
         # Send each detected face to Kafka
@@ -116,7 +116,7 @@ async def run_consumer():
         
         count[0] += len(faces_data)
     
-    # Use InputLayerConsumer.consume() as per README
+    # Use InputLayerConsumer.consume() as per architecture readme
     await consumer.consume(onFrame=handle_message)
     
     # Keep running indefinitely
@@ -124,7 +124,7 @@ async def run_consumer():
         while True:
             await asyncio.sleep(1)
     except KeyboardInterrupt:
-        print(f"\n🛑 Stopping consumer... Processed {count[0]} faces")
+        print(f"\nStopping consumer... Processed {count[0]} faces")
         await consumer.disconnect()
         await kafka.disconnect()
 
