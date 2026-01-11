@@ -18,11 +18,17 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
+import os
 
 import requests
 
-# Add parent directory to path for architecture imports
-sys.path.append(str(Path(__file__).parent.parent))
+# Remove the conflicting global module from sys.modules
+if 'architecture' in sys.modules:
+    del sys.modules['architecture']
+
+# Ensure the project root directory is prioritized in the Python path
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
 
 from architecture.library.output_layer import OutputLayerProducer, OutputLayerReceiver, OutputLayerMetadata
 

@@ -8,11 +8,14 @@ import numpy as np
 import asyncio
 import base64
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
 from ultralytics import YOLOE
 
-sys.path.append("..")
+# Ensure the parent directory is in the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from architecture.library.output_layer import OutputLayerProducer, OutputLayerMetadata
 
 
