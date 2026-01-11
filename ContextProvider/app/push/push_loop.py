@@ -4,12 +4,11 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from architecture.library.output_layer import OutputLayerProducer, OutputLayerMetadata
-from ContextProvider.app.service.context_service import build_snapshot
-
+from ..service.context_service import build_snapshot
 
 # IDs used to build the Kafka topic:
 # topic = output.<source_id>.<service_id>  (all lowercased)
-# → "output.contextprovider.contextprovider"
+# → e.g. "output.contextprovider.contextprovider"
 # Make sure this topic exists or is allowed to be auto-created.
 SOURCE_ID = "contextprovider"
 SERVICE_ID = "contextprovider"

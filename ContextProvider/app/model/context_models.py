@@ -1,6 +1,5 @@
-from pydantic import BaseModel
 from typing import Optional, List, Literal
-
+from pydantic import BaseModel, Field
 
 # ---------- Basic Types ----------
 
@@ -51,6 +50,14 @@ class Holiday(BaseModel):
     regions: Optional[List[RegionCode]] = None
 
 
+class UpcomingHoliday(BaseModel):
+    """Upcoming holiday within a given time window."""
+    date: str           # YYYY-MM-DD
+    localName: str
+    countryCode: CountryCode
+    daysUntil: int      # days from 'today' until this holiday
+
+
 # ---------- Weather ----------
 
 class WeatherContext(BaseModel):
@@ -60,6 +67,26 @@ class WeatherContext(BaseModel):
     windKph: Optional[float] = None
     precipitationMm: Optional[float] = None
     summary: Optional[str] = None
+
+
+class WeatherForecastPoint(BaseModel):
+    """Weather forecast for a specific hour in the near future."""
+    timestamp: str                # ISO 8601 datetime with timezone
+    date: str                     # YYYY-MM-DD (local date)
+    time: str                     # HH:MM (local time)
+    weekday: str                  # Weekday name, e.g. "Sunday"
+    temperatureC: Optional[float] = None
+    windKph: Optional[float] = None
+    precipitationMm: Optional[float] = None
+
+
+class WeatherTomorrow(BaseModel):
+    """Daily weather summary for tomorrow."""
+    date: str                     # YYYY-MM-DD
+    temperatureMaxC: Optional[float] = None
+    temperatureMinC: Optional[float] = None
+    precipitationMm: Optional[float] = None
+    windKphMax: Optional[float] = None
 
 
 # ---------- Locale ----------
@@ -76,8 +103,15 @@ class EnvironmentContext(BaseModel):
     """Full environment context returned to the client."""
     location: LocationResolved
     dateTime: DateTimeContext
-    holidays: List[Holiday] = []
-    weather: Optional[WeatherContext] = None
+    holidays: List[Holiday] = Field(default_factory=list)
+    upcoming_holidays: List[UpcomingHoliday] = Field(default_factory=list)
+
+    # Wetter
+    weather_current: Optional[WeatherContext] = None
+    weather_forecast: List[WeatherForecastPoint] = Field(default_factory=list)
+    weather_tomorrow: Optional[WeatherTomorrow] = None
+
+    # Sprache/Lokalisierung
     locale: LocaleContext
 
 

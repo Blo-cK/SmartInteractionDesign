@@ -1,8 +1,6 @@
 import os
 from typing import TypedDict
-
 import httpx
-
 
 class PushConfig(TypedDict):
     """Configuration for server-side push behaviour."""

@@ -1,13 +1,15 @@
 from typing import Optional
+
+import asyncio
 from fastapi import FastAPI, Header, Query
-from ContextProvider.app.model.context_models import (
+
+from .model.context_models import (
     LocationHint,
     ContextInput,
     ContextEnvelope,
 )
-from ContextProvider.app.service.context_service import build_snapshot, build_delta
-import asyncio
-from ContextProvider.app.push.push_loop import push_loop
+from .service.context_service import build_snapshot, build_delta
+from .push.push_loop import push_loop
 
 app = FastAPI(
     title="context_provider",
@@ -15,10 +17,12 @@ app = FastAPI(
     version="0.1.0",
 )
 
+
 @app.get("/health")
 async def health() -> dict:
     """Simple health-check endpoint used by monitoring or local checks."""
     return {"ok": True}
+
 
 @app.get(
     "/context",
@@ -38,7 +42,7 @@ async def get_context(
     Return a full environment context snapshot.
 
     Location can optionally be provided via query parameters.
-    If no location is given, a default location (e.g. Karlsruhe) is used.
+    If no location is given, a default / auto-detected location is used.
     """
     location_hint: Optional[LocationHint] = None
     if lat is not None and lon is not None:
@@ -77,6 +81,7 @@ async def post_context(
         location_hint=body.locationHint,
     )
     return envelope
+
 
 @app.get(
     "/context/delta",
@@ -122,8 +127,7 @@ async def get_context_delta(
 @app.on_event("startup")
 async def startup_event() -> None:
     """
-    FastAPI startup hook that kicks off the background push loop.
-
-    The loop will only run if PUSH_ENABLED=true and a PUSH_WEBHOOK_URL is configured.
+    FastAPI startup hook that starts the background Kafka push loop
+    for environment context snapshots.
     """
     asyncio.create_task(push_loop())
