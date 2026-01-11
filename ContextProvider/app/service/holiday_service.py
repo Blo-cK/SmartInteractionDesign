@@ -1,13 +1,9 @@
 from __future__ import annotations
-
 from typing import List
-
 import httpx
-
 from ..model.context_models import Holiday
 
 NAGER_BASE_URL = "https://date.nager.at"
-
 
 async def fetch_holidays(country_code: str, year: int) -> List[Holiday]:
     """

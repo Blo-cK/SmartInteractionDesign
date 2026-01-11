@@ -6,39 +6,33 @@ from typing import Optional
 from architecture.library.output_layer import OutputLayerProducer, OutputLayerMetadata
 from ..service.context_service import build_snapshot
 
-# IDs used to build the Kafka topic:
-# topic = output.<source_id>.<service_id>  (all lowercased)
-# → e.g. "output.contextprovider.contextprovider"
-# Make sure this topic exists or is allowed to be auto-created.
+# Topic name pattern used by the shared output layer:
+#   output.<source_id>.<service_id>  (lowercase)
 SOURCE_ID = "contextprovider"
 SERVICE_ID = "contextprovider"
 
-
 async def push_loop(interval_seconds: int = 60) -> None:
     """
-    Background loop that periodically builds a context snapshot
-    and pushes it into the shared Kafka output layer.
-
-    - Uses OutputLayerMetadata, which is what the architecture expects.
-    - Sends only when the context hash changes (to avoid spamming Kafka).
+    Periodically builds a context snapshot and publishes it to Kafka.
+    The loop keeps track of the last hash and only pushes a new message
+    when the context changes, to reduce needless traffic.
     """
     producer = OutputLayerProducer()
     last_hash: Optional[str] = None
 
     while True:
         try:
-            # 1) Build a fresh context snapshot (your existing logic)
             envelope = await build_snapshot(
-                accept_language="de-DE",  # you can make this configurable later
+                accept_language="de-DE",  # can be made configurable if needed
                 location_hint=None,
             )
 
-            # 2) Only push if context has changed
+            # Only publish if the context content has changed
             if envelope.hash != last_hash:
                 now_iso = datetime.now(timezone.utc).isoformat()
                 completed_at = int(time.time())
 
-                # Full envelope (snapshot) as the result payload
+                # Complete snapshot is sent as the result payload
                 result_dict = envelope.model_dump()
 
                 metadata = OutputLayerMetadata(
@@ -59,7 +53,7 @@ async def push_loop(interval_seconds: int = 60) -> None:
                 last_hash = envelope.hash
 
         except Exception as e:
-            # Do not crash the loop on errors; just log and retry later.
+            # Keep the loop running even if sending fails once
             print(f"[ContextProvider] Error in push_loop: {e}")
 
         await asyncio.sleep(interval_seconds)

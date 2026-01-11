@@ -1,8 +1,6 @@
 from typing import Optional
-
 import asyncio
 from fastapi import FastAPI, Header, Query
-
 from .model.context_models import (
     LocationHint,
     ContextInput,
@@ -40,7 +38,6 @@ async def get_context(
 ) -> ContextEnvelope:
     """
     Return a full environment context snapshot.
-
     Location can optionally be provided via query parameters.
     If no location is given, a default / auto-detected location is used.
     """
@@ -73,7 +70,6 @@ async def post_context(
 ) -> ContextEnvelope:
     """
     Same as GET /context but accepts a JSON body with a LocationHint.
-
     Useful when the caller already has a structured location object instead of query parameters.
     """
     envelope = await build_snapshot(
@@ -100,7 +96,6 @@ async def get_context_delta(
 ) -> ContextEnvelope:
     """
     Return a delta envelope compared to the given sinceHash.
-
     - If sinceHash is missing or equal to the current hash:
       -> data will be an empty object (no changes).
     - If sinceHash differs:

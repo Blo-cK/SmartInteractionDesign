@@ -1,15 +1,11 @@
 from __future__ import annotations
-
 from typing import Optional, List
 from datetime import datetime, timedelta, date
 from zoneinfo import ZoneInfo
-
 import httpx
-
 from ..model.context_models import WeatherContext, WeatherForecastPoint, WeatherTomorrow
 
 OPEN_METEO_BASE_URL = "https://api.open-meteo.com/v1"
-
 
 async def fetch_current_weather(lat: float, lon: float) -> Optional[WeatherContext]:
     """
@@ -49,7 +45,6 @@ async def fetch_hourly_forecast(
     """
     Fetch an hourly weather forecast for the next `hours` hours
     for a given location from Open-Meteo.
-
     Returns a list of WeatherForecastPoint, sorted by time ascending.
     """
     params = {

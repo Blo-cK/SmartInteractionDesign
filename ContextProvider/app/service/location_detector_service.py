@@ -1,9 +1,6 @@
 from __future__ import annotations
-
 from typing import Optional
-
 import httpx
-
 from ..model.context_models import LocationResolved, CountryCode, RegionCode
 
 IP_API_URL = "https://api.ipify.org"
@@ -14,7 +11,6 @@ async def detect_server_location() -> Optional[LocationResolved]:
     """
     Try to detect the physical location of the host running this service
     using IP-based geolocation.
-
     Returns:
         LocationResolved or None if detection fails.
     """
@@ -43,7 +39,7 @@ async def detect_server_location() -> Optional[LocationResolved]:
 
     city = data.get("city")
     country_code: Optional[CountryCode] = data.get("country_code")
-    # ipapi: "region_code" ist z.B. "BW", "BY" ...
+    # ipapi: "region_code" is for example "BW", "BY" ...
     region_code_raw = data.get("region_code")
 
     try:
@@ -54,7 +50,6 @@ async def detect_server_location() -> Optional[LocationResolved]:
 
     region: Optional[RegionCode] = None
     if country_code and region_code_raw:
-        # Wir normieren auf das gleiche Format wie Nager.Date ("DE-BW", "DE-BY", ...)
         region = f"{country_code}-{region_code_raw}"
 
     return LocationResolved(
