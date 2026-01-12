@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, date, timedelta
-from typing import Optional
+from typing import Optional, List
 from zoneinfo import ZoneInfo
 
 from ContextProvider.app.model.context_models import (
@@ -22,8 +22,10 @@ from ContextProvider.app.model.context_models import (
     PlaceContext,
     ComfortContext,
     EventsContext,
-    HolidayDistance,
+    HolidaySummary,
+    HolidayWithDelta,
 )
+
 from ContextProvider.app.service.holiday_service import fetch_holidays
 from ContextProvider.app.service.weather_service import (
     fetch_current_weather,
@@ -38,12 +40,16 @@ from ContextProvider.app.service.events_service import fetch_local_events_contex
 
 TIMEZONE = "Europe/Berlin"
 
-# Filled once by IP-based geolocation and then reused
+# Filled once via IP-based lookup and then reused
 SERVER_LOCATION: Optional[LocationResolved] = None
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
 def _part_of_day(hour: int) -> str:
-    """Map hour of day (0–23) to a coarse part-of-day label."""
+    """Return a coarse time-of-day label for an hour in [0, 23]."""
     if hour < 5:
         return "night"
     if hour < 12:
@@ -55,7 +61,8 @@ def _part_of_day(hour: int) -> str:
 
 def _parse_locale(accept_language: Optional[str]) -> LocaleContext:
     """
-    Parse Accept-Language header into a simple LocaleContext.
+    Parse an Accept-Language header into a LocaleContext.
+
     Example: "de-DE,de;q=0.9,en-US;q=0.8" -> language="de", locale="de-DE"
     """
     header = accept_language or "en-US"
@@ -64,13 +71,10 @@ def _parse_locale(accept_language: Optional[str]) -> LocaleContext:
     return LocaleContext(language=language, locale=primary)
 
 
-def _resolve_location(hint: Optional[LocationHint]) -> LocationResolved:
+def _resolve_location_from_hint(hint: Optional[LocationHint]) -> LocationResolved:
     """
-    Resolve location using an optional LocationHint.
-
-    - If a hint with lat/lon is provided: use that.
-    - Otherwise: fall back to a default location (Karlsruhe).
-      This default can be overridden by the detected server location.
+    Resolve location from a client-supplied LocationHint.
+    Falls back to Karlsruhe if no coordinates are provided.
     """
     if hint and hint.lat is not None and hint.lon is not None:
         return LocationResolved(
@@ -81,6 +85,7 @@ def _resolve_location(hint: Optional[LocationHint]) -> LocationResolved:
             region=hint.region,
         )
 
+    # Default fallback if no hint is available and server location cannot be detected
     return LocationResolved(
         lat=49.0069,
         lon=8.4037,
@@ -92,107 +97,56 @@ def _resolve_location(hint: Optional[LocationHint]) -> LocationResolved:
 
 def _stable_hash(obj: object) -> str:
     """
-    Compute a stable hash (sha256, first 16 hex chars) over a JSON-serialised object.
-    This is used to detect changes for delta-style updates.
+    Compute a stable hash (sha256, first 16 hex chars) over a JSON-serialized object.
+    Used to detect changes for delta-style updates.
     """
     json_str = json.dumps(obj, sort_keys=True, default=str)
     h = hashlib.sha256(json_str.encode("utf-8")).hexdigest()
     return h[:16]
 
 
-def _compute_holiday_distances(
-    all_holidays: list[Holiday],
-    today: date,
-) -> tuple[Optional[HolidayDistance], Optional[HolidayDistance], Optional[HolidayDistance]]:
+def _filter_holidays_for_region(
+    all_holidays: List[Holiday],
+    country_code: Optional[str],
+    region: Optional[str],
+) -> List[Holiday]:
     """
-    Compute:
-    - lastHoliday: most recent holiday on or before today (daysSince >= 0)
-    - nextHoliday: next holiday on or after today (daysUntil >= 0)
-    - nearestHoliday: holiday with the smallest absolute distance to today
-      (uses either daysSince or daysUntil depending on past/future).
+    Filter the Nager.Date holidays list down to the relevant region, if possible.
+
+    If a holiday has no regions defined, it is treated as nationwide.
+    If regions are present, only holidays whose region matches the given region code
+    are kept.
     """
-    if not all_holidays:
-        return None, None, None
+    if not country_code:
+        return all_holidays
 
-    parsed: list[tuple[date, Holiday]] = []
-    for h in all_holidays:
-        if not h.date:
-            continue
-        try:
-            d = date.fromisoformat(h.date)
-        except ValueError:
-            continue
-        parsed.append((d, h))
+    if not region:
+        return all_holidays
 
-    if not parsed:
-        return None, None, None
+    base_region = region  # e.g. "DE-BW", "BW" or "Baden-Württemberg"
+    candidate_codes: List[str] = []
 
-    past_or_today = [(d, h) for (d, h) in parsed if d <= today]
-    future_or_today = [(d, h) for (d, h) in parsed if d >= today]
-
-    last_holiday: Optional[HolidayDistance] = None
-    next_holiday: Optional[HolidayDistance] = None
-    nearest_holiday: Optional[HolidayDistance] = None
-
-    # Last holiday (<= today) → daysSince
-    if past_or_today:
-        last_date, last_h = max(past_or_today, key=lambda x: x[0])
-        days_ago = (today - last_date).days
-        last_holiday = HolidayDistance(
-            date=last_h.date,
-            localName=last_h.localName,
-            countryCode=last_h.countryCode,
-            daysSince=days_ago,
-            daysUntil=None,
-        )
-
-    # Next holiday (>= today) → daysUntil
-    if future_or_today:
-        next_date, next_h = min(future_or_today, key=lambda x: x[0])
-        days_until = (next_date - today).days
-        next_holiday = HolidayDistance(
-            date=next_h.date,
-            localName=next_h.localName,
-            countryCode=next_h.countryCode,
-            daysSince=None,
-            daysUntil=days_until,
-        )
-
-    # Nearest holiday in absolute days
-    nearest_date, nearest_h = min(
-        parsed,
-        key=lambda x: abs((x[0] - today).days),
-    )
-    diff = (nearest_date - today).days
-
-    if diff >= 0:
-        nearest_holiday = HolidayDistance(
-            date=nearest_h.date,
-            localName=nearest_h.localName,
-            countryCode=nearest_h.countryCode,
-            daysSince=None,
-            daysUntil=diff,
-        )
+    if "-" in base_region:
+        # Already in form "DE-BW"
+        candidate_codes.append(base_region)
     else:
-        nearest_holiday = HolidayDistance(
-            date=nearest_h.date,
-            localName=nearest_h.localName,
-            countryCode=nearest_h.countryCode,
-            daysSince=abs(diff),
-            daysUntil=None,
-        )
+        # Short code "BW" -> "DE-BW"
+        candidate_codes.append(f"{country_code}-{base_region}")
 
-    return last_holiday, next_holiday, nearest_holiday
+    def matches_region(h: Holiday) -> bool:
+        if h.regions is None:
+            return True
+        return any(code in (h.regions or []) for code in candidate_codes)
+
+    return [h for h in all_holidays if matches_region(h)]
 
 
 def _compute_day_meta(
     today: date,
     weekday_index: int,
-    holidays: list[Holiday],
+    holidays: List[Holiday],
 ) -> DayMeta:
-    """
-    Compute isWeekend, isPublicHolidayToday and a simple isBridgeDay heuristic.
-    """
+    """Compute weekend / holiday / bridge-day flags for the current date."""
     is_weekend = weekday_index >= 5  # 5=Saturday, 6=Sunday
     today_str = today.isoformat()
     is_public_holiday_today = any(h.date == today_str for h in holidays)
@@ -204,7 +158,8 @@ def _compute_day_meta(
         has_adjacent_holiday = any(
             h.date in (yesterday_str, tomorrow_str) for h in holidays
         )
-        if has_adjacent_holiday and weekday_index in (0, 4):  # Monday or Friday
+        # Simple heuristic: Monday or Friday next to at least one holiday
+        if has_adjacent_holiday and weekday_index in (0, 4):
             is_bridge_day = True
 
     return DayMeta(
@@ -214,43 +169,172 @@ def _compute_day_meta(
     )
 
 
-async def build_snapshot(
+def _to_holiday_with_delta(h: Holiday, delta_days: int) -> HolidayWithDelta:
+    """
+    Convert a Holiday plus a signed delta in days into a HolidayWithDelta.
+
+    - For past holidays (delta_days < 0): daysAgo > 0, daysUntil = None
+    - For future holidays (delta_days > 0): daysUntil > 0, daysAgo = None
+    - For today (delta_days == 0): both daysAgo and daysUntil are 0
+    """
+    if delta_days < 0:
+        return HolidayWithDelta(
+            date=h.date,
+            localName=h.localName,
+            countryCode=h.countryCode,
+            daysAgo=-delta_days,
+            daysUntil=None,
+        )
+    elif delta_days > 0:
+        return HolidayWithDelta(
+            date=h.date,
+            localName=h.localName,
+            countryCode=h.countryCode,
+            daysAgo=None,
+            daysUntil=delta_days,
+        )
+    else:
+        return HolidayWithDelta(
+            date=h.date,
+            localName=h.localName,
+            countryCode=h.countryCode,
+            daysAgo=0,
+            daysUntil=0,
+        )
+
+
+def _compute_holiday_summary(
+    holidays: List[Holiday],
+    today: date,
+) -> HolidaySummary:
+    """
+    Compute a compact summary:
+    - lastHoliday: most recent holiday in the past
+    - nextHoliday: next upcoming holiday in the future
+    - nearestHoliday: closest holiday in time relative to today
+    """
+    if not holidays:
+        return HolidaySummary(
+            lastHoliday=None,
+            nextHoliday=None,
+            nearestHoliday=None,
+        )
+
+    last_h: Optional[HolidayWithDelta] = None
+    next_h: Optional[HolidayWithDelta] = None
+    nearest_h: Optional[HolidayWithDelta] = None
+
+    min_future_delta: Optional[int] = None
+    max_past_delta: Optional[int] = None
+    min_abs_delta: Optional[int] = None
+
+    for h in holidays:
+        try:
+            h_date = date.fromisoformat(h.date)
+        except ValueError:
+            continue
+
+        delta_days = (h_date - today).days
+
+        # Track last holiday (closest in the past)
+        if delta_days < 0:
+            if max_past_delta is None or delta_days > max_past_delta:
+                max_past_delta = delta_days
+                last_h = _to_holiday_with_delta(h, delta_days)
+
+        # Track next holiday (closest in the future)
+        elif delta_days > 0:
+            if min_future_delta is None or delta_days < min_future_delta:
+                min_future_delta = delta_days
+                next_h = _to_holiday_with_delta(h, delta_days)
+
+        # Today is a holiday
+        else:
+            # For today, we treat it as both last and next with distance 0.
+            last_h = _to_holiday_with_delta(h, 0)
+            next_h = _to_holiday_with_delta(h, 0)
+
+        # Track nearest holiday in absolute distance
+        abs_delta = abs(delta_days)
+        if min_abs_delta is None or abs_delta < min_abs_delta:
+            min_abs_delta = abs_delta
+            nearest_h = _to_holiday_with_delta(h, delta_days)
+
+    return HolidaySummary(
+        lastHoliday=last_h,
+        nextHoliday=next_h,
+        nearestHoliday=nearest_h,
+    )
+
+
+async def _determine_effective_location(
+    location_hint: Optional[LocationHint],
+) -> LocationResolved:
+    """
+    Determine the effective location in this order:
+    1) client-supplied LocationHint (lat/lon)
+    2) cached server location (resolved via IP)
+    3) static fallback (Karlsruhe)
+    """
+    global SERVER_LOCATION
+
+    # 1) Client hint with coordinates wins
+    if location_hint and location_hint.lat is not None and location_hint.lon is not None:
+        return _resolve_location_from_hint(location_hint)
+
+    # 2) Try auto-detection once
+    if SERVER_LOCATION is None:
+        try:
+            auto_loc = await detect_server_location()
+            if auto_loc is not None:
+                SERVER_LOCATION = auto_loc
+                print(f"[ContextProvider] Auto-detected server location: {SERVER_LOCATION}")
+        except Exception:
+            SERVER_LOCATION = None
+
+    if SERVER_LOCATION is not None:
+        return LocationResolved(
+            lat=SERVER_LOCATION.lat,
+            lon=SERVER_LOCATION.lon,
+            city=SERVER_LOCATION.city,
+            countryCode=SERVER_LOCATION.countryCode,
+            region=SERVER_LOCATION.region,
+        )
+
+    # 3) Static fallback
+    return _resolve_location_from_hint(None)
+
+
+# ---------------------------------------------------------------------------
+# Dynamic context (for HTTP + dynamic Kafka topic)
+# ---------------------------------------------------------------------------
+
+async def build_dynamic_context(
     accept_language: Optional[str],
     location_hint: Optional[LocationHint] = None,
 ) -> ContextEnvelope:
     """
-    Build a full environment context snapshot wrapped in a ContextEnvelope.
+    Build a full environment context snapshot:
+
+    - location (hint / server / fallback)
+    - locale
+    - holidays + holiday summary
+    - day meta (weekend / holiday / bridge day)
+    - time of day
+    - weather now, short-term forecast, tomorrow summary
+    - daylight (sunrise/sunset)
+    - place categorisation
+    - comfort estimation
+    - events container (local events)
     """
     tz = ZoneInfo(TIMEZONE)
     now = datetime.now(tz)
     today = now.date()
 
-    # Effective location: client hint, detected server location, or default
-    effective_hint: Optional[LocationHint] = location_hint
-
-    global SERVER_LOCATION
-    if effective_hint is None:
-        if SERVER_LOCATION is None:
-            try:
-                auto_loc = await detect_server_location()
-                if auto_loc is not None:
-                    SERVER_LOCATION = auto_loc
-                    print(f"[ContextProvider] Auto-detected server location: {SERVER_LOCATION}")
-            except Exception:
-                SERVER_LOCATION = None
-
-        if SERVER_LOCATION is not None:
-            effective_hint = LocationHint(
-                lat=SERVER_LOCATION.lat,
-                lon=SERVER_LOCATION.lon,
-                city=SERVER_LOCATION.city,
-                countryCode=SERVER_LOCATION.countryCode,
-                region=SERVER_LOCATION.region,
-            )
-
-    location = _resolve_location(effective_hint)
+    location = await _determine_effective_location(location_hint)
     locale = _parse_locale(accept_language)
 
+    # Core date/time
     dt = DateTimeContext(
         iso=now.isoformat(),
         timezone=TIMEZONE,
@@ -258,49 +342,27 @@ async def build_snapshot(
         partOfDay=_part_of_day(now.hour),
     )
 
-    # Holidays and derived fields
-    holidays: list[Holiday] = []
-    last_holiday: Optional[HolidayDistance] = None
-    next_holiday: Optional[HolidayDistance] = None
-    nearest_holiday: Optional[HolidayDistance] = None
-
+    # Holidays + summary
+    holidays: List[Holiday] = []
+    holiday_summary: Optional[HolidaySummary] = None
     if location.countryCode:
         try:
             all_holidays = await fetch_holidays(location.countryCode, now.year)
-
-            # Optional region filter (e.g. "DE-BW")
-            if location.region:
-                base_region = location.region
-
-                candidate_codes: list[str] = []
-                if "-" in base_region:
-                    candidate_codes.append(base_region)
-                else:
-                    candidate_codes.append(f"{location.countryCode}-{base_region}")
-
-                def matches_region(h: Holiday) -> bool:
-                    if h.regions is None:
-                        return True
-                    return any(code in (h.regions or []) for code in candidate_codes)
-
-                holidays = [h for h in all_holidays if matches_region(h)]
-            else:
-                holidays = all_holidays
-
-            last_holiday, next_holiday, nearest_holiday = _compute_holiday_distances(
-                holidays, today
+            holidays = _filter_holidays_for_region(
+                all_holidays,
+                country_code=location.countryCode,
+                region=location.region,
             )
+            holiday_summary = _compute_holiday_summary(holidays, today)
         except Exception:
             holidays = []
-            last_holiday = None
-            next_holiday = None
-            nearest_holiday = None
+            holiday_summary = None
 
     day_meta = _compute_day_meta(today, now.weekday(), holidays)
 
-    # Weather: current, forecast next hours, tomorrow summary
+    # Weather
     weather_current: Optional[WeatherContext] = None
-    weather_forecast: list[WeatherForecastPoint] = []
+    weather_forecast: List[WeatherForecastPoint] = []
     weather_tomorrow: Optional[WeatherTomorrow] = None
 
     try:
@@ -356,7 +418,7 @@ async def build_snapshot(
     except Exception:
         comfort = None
 
-    # Events context
+    # Events
     try:
         events_ctx = await fetch_local_events_context(location, now)
     except Exception:
@@ -367,9 +429,7 @@ async def build_snapshot(
         dateTime=dt,
         dayMeta=day_meta,
         holidays=holidays,
-        lastHoliday=last_holiday,
-        nextHoliday=next_holiday,
-        nearestHoliday=nearest_holiday,
+        holidaySummary=holiday_summary,
         weather_current=weather_current,
         weather_forecast=weather_forecast,
         weather_tomorrow=weather_tomorrow,
@@ -392,6 +452,84 @@ async def build_snapshot(
     )
 
 
+# ---------------------------------------------------------------------------
+# Static context (for static Kafka topic)
+# ---------------------------------------------------------------------------
+
+async def build_static_context(
+    accept_language: Optional[str],
+    location_hint: Optional[LocationHint] = None,
+) -> dict:
+    """
+    Build a reduced, mostly static context payload.
+
+    Intended for the "static" Kafka topic:
+    - location
+    - locale
+    - holidays (filtered for region)
+    - holidaySummary (last / next / nearest)
+    - dayMeta (weekend / holiday / bridge day)
+    - placeContext
+    """
+    tz = ZoneInfo(TIMEZONE)
+    now = datetime.now(tz)
+    today = now.date()
+
+    location = await _determine_effective_location(location_hint)
+    locale = _parse_locale(accept_language)
+
+    holidays: List[Holiday] = []
+    holiday_summary: Optional[HolidaySummary] = None
+    if location.countryCode:
+        try:
+            all_holidays = await fetch_holidays(location.countryCode, now.year)
+            holidays = _filter_holidays_for_region(
+                all_holidays,
+                country_code=location.countryCode,
+                region=location.region,
+            )
+            holiday_summary = _compute_holiday_summary(holidays, today)
+        except Exception:
+            holidays = []
+            holiday_summary = None
+
+    day_meta = _compute_day_meta(today, now.weekday(), holidays)
+
+    place_ctx: Optional[PlaceContext] = None
+    try:
+        place_ctx = await fetch_place_context(location.lat, location.lon)
+    except Exception:
+        place_ctx = None
+
+    # Static payload is a simple dict, not a ContextEnvelope
+    return {
+        "location": location.model_dump(),
+        "locale": locale.model_dump(),
+        "holidays": [h.model_dump() for h in holidays],
+        "holidaySummary": holiday_summary.model_dump() if holiday_summary else None,
+        "dayMeta": day_meta.model_dump(),
+        "placeContext": place_ctx.model_dump() if place_ctx else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Backwards-compatible wrappers for HTTP API
+# ---------------------------------------------------------------------------
+
+async def build_snapshot(
+    accept_language: Optional[str],
+    location_hint: Optional[LocationHint] = None,
+) -> ContextEnvelope:
+    """
+    Wrapper used by the HTTP /context endpoints.
+    Delegates to the dynamic context builder.
+    """
+    return await build_dynamic_context(
+        accept_language=accept_language,
+        location_hint=location_hint,
+    )
+
+
 async def build_delta(
     accept_language: Optional[str],
     location_hint: Optional[LocationHint] = None,
@@ -399,6 +537,11 @@ async def build_delta(
 ) -> ContextEnvelope:
     """
     Build a delta envelope compared to the given since_hash.
+
+    - If since_hash is missing OR equal to the current hash:
+      -> return an empty data object (no changes).
+    - Otherwise:
+      -> return the full EnvironmentContext as data.
     """
     snapshot = await build_snapshot(
         accept_language=accept_language,

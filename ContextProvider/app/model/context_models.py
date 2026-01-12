@@ -41,7 +41,7 @@ class DateTimeContext(BaseModel):
 
 
 class DayMeta(BaseModel):
-    """Meta information about 'today', derived from date and holidays."""
+    """Meta information about 'today', derived from date + holidays."""
     isWeekend: bool
     isPublicHolidayToday: bool
     isBridgeDay: bool
@@ -50,26 +50,29 @@ class DayMeta(BaseModel):
 # ---------- Holidays ----------
 
 class Holiday(BaseModel):
-    """Public holiday information."""
+    """Public holiday information (optionally region-scoped)."""
     date: str           # YYYY-MM-DD
     localName: str
     countryCode: CountryCode
     regions: Optional[List[RegionCode]] = None
 
 
-class HolidayDistance(BaseModel):
-    """
-    Holiday with an explicit distance in days.
-
-    Exactly one of the fields is usually set:
-    - daysSince: holiday is in the past (0 = today, >0 = days ago)
-    - daysUntil: holiday is in the future (0 = today, >0 = days until)
-    """
-    date: str           # YYYY-MM-DD
+class HolidayWithDelta(BaseModel):
+    """Single holiday with distance (in days) to 'today'."""
+    date: str                   # YYYY-MM-DD
     localName: str
     countryCode: CountryCode
-    daysSince: Optional[int] = None
+    # If the holiday lies in the past: daysAgo > 0, daysUntil = None.
+    daysAgo: Optional[int] = None
+    # If the holiday lies in the future: daysUntil > 0, daysAgo = None.
     daysUntil: Optional[int] = None
+
+
+class HolidaySummary(BaseModel):
+    """Summary around the current date: last / next / nearest holiday."""
+    lastHoliday: Optional[HolidayWithDelta] = None
+    nextHoliday: Optional[HolidayWithDelta] = None
+    nearestHoliday: Optional[HolidayWithDelta] = None
 
 
 # ---------- Weather ----------
@@ -106,7 +109,7 @@ class WeatherTomorrow(BaseModel):
 # ---------- Daylight ----------
 
 class DaylightContext(BaseModel):
-    """Information about sunrise, sunset and daylight situation."""
+    """Information about sunrise/sunset and daylight."""
     sunrise: Optional[str] = None        # ISO 8601
     sunset: Optional[str] = None         # ISO 8601
     isDaylight: Optional[bool] = None
@@ -114,7 +117,7 @@ class DaylightContext(BaseModel):
     minutesUntilSunset: Optional[int] = None
 
 
-# ---------- Place / Area ----------
+# ---------- Place / Umgebung ----------
 
 PlaceType = Literal[
     "unknown",
@@ -137,7 +140,7 @@ class PlaceContext(BaseModel):
     nearbyCategories: List[str] = Field(default_factory=list)
 
 
-# ---------- Comfort Context ----------
+# ---------- Comfort ----------
 
 RiskLevel = Literal["none", "low", "medium", "high"]
 
@@ -155,7 +158,7 @@ class ComfortContext(BaseModel):
 # ---------- Events ----------
 
 class LocalEvent(BaseModel):
-    """Representation of a local event that could be relevant for smalltalk."""
+    """Representation of a local event that could be relevant for small talk."""
     title: str
     category: Optional[str] = None
     startTime: Optional[str] = None      # ISO datetime
@@ -165,7 +168,7 @@ class LocalEvent(BaseModel):
 
 
 class EventsContext(BaseModel):
-    """Container for local events, e.g., for 'today' and nearby."""
+    """Container for local events, e.g., today/nearby."""
     localToday: List[LocalEvent] = Field(default_factory=list)
 
 
@@ -180,37 +183,35 @@ class LocaleContext(BaseModel):
 # ---------- Environment Context ----------
 
 class EnvironmentContext(BaseModel):
-    """Full environment context returned to the client."""
+    """
+    Full environment context returned to the client.
+
+    This model is used both for dynamic and static snapshots. Static
+    snapshots simply omit or leave None the dynamic parts if desired.
+    """
     location: LocationResolved
     dateTime: DateTimeContext
     dayMeta: DayMeta
 
     holidays: List[Holiday] = Field(default_factory=list)
+    holidaySummary: Optional[HolidaySummary] = None
 
-    # Precomputed holiday anchors
-    lastHoliday: Optional[HolidayDistance] = None
-    nextHoliday: Optional[HolidayDistance] = None
-    nearestHoliday: Optional[HolidayDistance] = None
-
-    # Weather
     weather_current: Optional[WeatherContext] = None
     weather_forecast: List[WeatherForecastPoint] = Field(default_factory=list)
     weather_tomorrow: Optional[WeatherTomorrow] = None
 
-    # Daylight / place / comfort / events
     daylight: Optional[DaylightContext] = None
     placeContext: Optional[PlaceContext] = None
     comfort: Optional[ComfortContext] = None
     events: EventsContext = Field(default_factory=EventsContext)
 
-    # Language / localisation
     locale: LocaleContext
 
 
 # ---------- Envelope ----------
 
 class ContextEnvelope(BaseModel):
-    """Generic wrapper for snapshots and delta updates."""
+    """Wrapper for snapshots and delta-style responses."""
     type: Literal["context-snapshot", "context-delta"]
     version: str
     producedAt: str

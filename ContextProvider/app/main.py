@@ -1,18 +1,26 @@
 from typing import Optional
+
 import asyncio
 from fastapi import FastAPI, Header, Query
-from .model.context_models import (
+
+from ContextProvider.app.model.context_models import (
     LocationHint,
     ContextInput,
     ContextEnvelope,
 )
-from .service.context_service import build_snapshot, build_delta
-from .push.push_loop import push_loop
+from ContextProvider.app.service.context_service import (
+    build_snapshot,
+    build_delta,
+)
+from ContextProvider.app.push.push_loop import push_loop
 
 app = FastAPI(
     title="context_provider",
-    description="Python Environment Context Service (Request/Response)",
-    version="0.1.0",
+    description=(
+        "Python Environment Context Service "
+        "(Environment + Location + Time + Weather + Holidays)"
+    ),
+    version="1.0.0",
 )
 
 
@@ -28,7 +36,9 @@ async def health() -> dict:
 )
 async def get_context(
     accept_language: Optional[str] = Header(
-        default=None, alias="Accept-Language", description="HTTP Accept-Language header"
+        default=None,
+        alias="Accept-Language",
+        description="HTTP Accept-Language header",
     ),
     lat: Optional[float] = Query(default=None),
     lon: Optional[float] = Query(default=None),
@@ -37,9 +47,11 @@ async def get_context(
     region: Optional[str] = Query(default=None),
 ) -> ContextEnvelope:
     """
-    Return a full environment context snapshot.
+    Return a full environment context snapshot as a ContextEnvelope.
+
     Location can optionally be provided via query parameters.
-    If no location is given, a default / auto-detected location is used.
+    If no location is given, the server location (if detectable) or a default
+    fallback location (Karlsruhe) is used.
     """
     location_hint: Optional[LocationHint] = None
     if lat is not None and lon is not None:
@@ -65,12 +77,16 @@ async def get_context(
 async def post_context(
     body: ContextInput,
     accept_language: Optional[str] = Header(
-        default=None, alias="Accept-Language", description="HTTP Accept-Language header"
+        default=None,
+        alias="Accept-Language",
+        description="HTTP Accept-Language header",
     ),
 ) -> ContextEnvelope:
     """
     Same as GET /context but accepts a JSON body with a LocationHint.
-    Useful when the caller already has a structured location object instead of query parameters.
+
+    Useful when the caller already has a structured location object instead of
+    passing lat/lon as query parameters.
     """
     envelope = await build_snapshot(
         accept_language=accept_language,
@@ -85,9 +101,14 @@ async def post_context(
 )
 async def get_context_delta(
     accept_language: Optional[str] = Header(
-        default=None, alias="Accept-Language", description="HTTP Accept-Language header"
+        default=None,
+        alias="Accept-Language",
+        description="HTTP Accept-Language header",
     ),
-    sinceHash: Optional[str] = Query(default=None, description="Hash of the last known context snapshot"),
+    sinceHash: Optional[str] = Query(
+        default=None,
+        description="Hash of the last known context snapshot",
+    ),
     lat: Optional[float] = Query(default=None),
     lon: Optional[float] = Query(default=None),
     city: Optional[str] = Query(default=None),
@@ -96,6 +117,7 @@ async def get_context_delta(
 ) -> ContextEnvelope:
     """
     Return a delta envelope compared to the given sinceHash.
+
     - If sinceHash is missing or equal to the current hash:
       -> data will be an empty object (no changes).
     - If sinceHash differs:
@@ -122,7 +144,9 @@ async def get_context_delta(
 @app.on_event("startup")
 async def startup_event() -> None:
     """
-    FastAPI startup hook that starts the background Kafka push loop
-    for environment context snapshots.
+    FastAPI startup hook that starts the Kafka push loop.
+
+    The push loop is responsible for sending static and dynamic environment
+    context messages into the shared Kafka hub on separate topics.
     """
     asyncio.create_task(push_loop())
