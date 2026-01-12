@@ -2,68 +2,89 @@ from typing import Optional, List, Literal
 from pydantic import BaseModel, Field
 
 # ---------- Basic Types ----------
+
 CountryCode = str  # ISO-3166-1 alpha-2 (e.g. "DE")
 RegionCode = str   # ISO-3166-2 (e.g. "DE-BW")
 
+
 # ---------- Location ----------
+
 class LocationHint(BaseModel):
-    """Location information provided by the caller, if available."""
+    """Optional location input provided by the client."""
     city: Optional[str] = None
     countryCode: Optional[CountryCode] = None
     region: Optional[RegionCode] = None
     lat: Optional[float] = None
     lon: Optional[float] = None
 
+
 class LocationResolved(BaseModel):
-    """Location used internally and returned as part of the context."""
+    """Resolved location used internally and returned to clients."""
     lat: float
     lon: float
     city: Optional[str] = None
     countryCode: Optional[CountryCode] = None
     region: Optional[RegionCode] = None
 
+
 # ---------- Date & Time ----------
+
 PartOfDay = Literal["morning", "afternoon", "evening", "night"]
 
+
 class DateTimeContext(BaseModel):
-    """Time-related information used for context-aware behaviour."""
+    """Time information used for contextual conversation."""
     iso: str
     timezone: str
     weekday: str
     partOfDay: PartOfDay
 
+
 class DayMeta(BaseModel):
-    """Basic flags derived from the current date and holiday information."""
+    """Meta information about 'today', derived from date and holidays."""
     isWeekend: bool
     isPublicHolidayToday: bool
     isBridgeDay: bool
 
+
 # ---------- Holidays ----------
+
 class Holiday(BaseModel):
-    """Information about a public holiday."""
+    """Public holiday information."""
     date: str           # YYYY-MM-DD
     localName: str
     countryCode: CountryCode
     regions: Optional[List[RegionCode]] = None
 
-class UpcomingHoliday(BaseModel):
-    """Public holiday within a defined lookahead window."""
+
+class HolidayDistance(BaseModel):
+    """
+    Holiday with an explicit distance in days.
+
+    Exactly one of the fields is usually set:
+    - daysSince: holiday is in the past (0 = today, >0 = days ago)
+    - daysUntil: holiday is in the future (0 = today, >0 = days until)
+    """
     date: str           # YYYY-MM-DD
     localName: str
     countryCode: CountryCode
-    daysUntil: int      # days from today until this holiday
+    daysSince: Optional[int] = None
+    daysUntil: Optional[int] = None
+
 
 # ---------- Weather ----------
+
 class WeatherContext(BaseModel):
-    """Snapshot of the current weather at the resolved location."""
+    """Current weather at the resolved location."""
     provider: str = "open-meteo"
     temperatureC: Optional[float] = None
     windKph: Optional[float] = None
     precipitationMm: Optional[float] = None
     summary: Optional[str] = None
 
+
 class WeatherForecastPoint(BaseModel):
-    """Hourly weather forecast entry for the near future."""
+    """Weather forecast for a specific hour in the near future."""
     timestamp: str                # ISO 8601 datetime with timezone
     date: str                     # YYYY-MM-DD (local date)
     time: str                     # HH:MM (local time)
@@ -72,24 +93,29 @@ class WeatherForecastPoint(BaseModel):
     windKph: Optional[float] = None
     precipitationMm: Optional[float] = None
 
+
 class WeatherTomorrow(BaseModel):
-    """Aggregated weather outlook for the next day."""
+    """Daily weather summary for tomorrow."""
     date: str                     # YYYY-MM-DD
     temperatureMaxC: Optional[float] = None
     temperatureMinC: Optional[float] = None
     precipitationMm: Optional[float] = None
     windKphMax: Optional[float] = None
 
+
 # ---------- Daylight ----------
+
 class DaylightContext(BaseModel):
-    """Sunrise/sunset and basic daylight information."""
+    """Information about sunrise, sunset and daylight situation."""
     sunrise: Optional[str] = None        # ISO 8601
     sunset: Optional[str] = None         # ISO 8601
     isDaylight: Optional[bool] = None
     minutesUntilSunrise: Optional[int] = None
     minutesUntilSunset: Optional[int] = None
 
-# ---------- Place / Surroundings ----------
+
+# ---------- Place / Area ----------
+
 PlaceType = Literal[
     "unknown",
     "home_like",
@@ -102,18 +128,22 @@ PlaceType = Literal[
     "transport_hub",
 ]
 
+
 class PlaceContext(BaseModel):
-    """High-level classification of the surrounding area."""
+    """Coarse-grained classification of the surrounding place."""
     placeType: PlaceType = "unknown"
     rawCategory: Optional[str] = None
     rawType: Optional[str] = None
     nearbyCategories: List[str] = Field(default_factory=list)
 
-# ---------- Comfort / Well-being ----------
+
+# ---------- Comfort Context ----------
+
 RiskLevel = Literal["none", "low", "medium", "high"]
 
+
 class ComfortContext(BaseModel):
-    """Approximate comfort and risk indicators derived from weather data."""
+    """Heuristic comfort and risk estimation derived from weather."""
     coldRisk: RiskLevel = "none"
     heatRisk: RiskLevel = "none"
     iceRisk: RiskLevel = "none"
@@ -121,9 +151,11 @@ class ComfortContext(BaseModel):
     shortWalkOk: bool = True
     longWalkOk: bool = True
 
+
 # ---------- Events ----------
+
 class LocalEvent(BaseModel):
-    """Local event or activity relevant for the user's surroundings."""
+    """Representation of a local event that could be relevant for smalltalk."""
     title: str
     category: Optional[str] = None
     startTime: Optional[str] = None      # ISO datetime
@@ -131,25 +163,34 @@ class LocalEvent(BaseModel):
     locationName: Optional[str] = None
     url: Optional[str] = None
 
+
 class EventsContext(BaseModel):
-    """Collection of local events for the current area."""
+    """Container for local events, e.g., for 'today' and nearby."""
     localToday: List[LocalEvent] = Field(default_factory=list)
 
+
 # ---------- Locale ----------
+
 class LocaleContext(BaseModel):
-    """Language and locale inferred from the client's preferences."""
+    """Language and locale derived from the Accept-Language header."""
     language: str
     locale: str
 
+
 # ---------- Environment Context ----------
+
 class EnvironmentContext(BaseModel):
-    """Combined environment information exposed by the service."""
+    """Full environment context returned to the client."""
     location: LocationResolved
     dateTime: DateTimeContext
     dayMeta: DayMeta
 
     holidays: List[Holiday] = Field(default_factory=list)
-    upcoming_holidays: List[UpcomingHoliday] = Field(default_factory=list)
+
+    # Precomputed holiday anchors
+    lastHoliday: Optional[HolidayDistance] = None
+    nextHoliday: Optional[HolidayDistance] = None
+    nearestHoliday: Optional[HolidayDistance] = None
 
     # Weather
     weather_current: Optional[WeatherContext] = None
@@ -162,19 +203,23 @@ class EnvironmentContext(BaseModel):
     comfort: Optional[ComfortContext] = None
     events: EventsContext = Field(default_factory=EventsContext)
 
-    # Language / locale
+    # Language / localisation
     locale: LocaleContext
 
+
 # ---------- Envelope ----------
+
 class ContextEnvelope(BaseModel):
-    """Wrapper for full snapshots and delta responses."""
+    """Generic wrapper for snapshots and delta updates."""
     type: Literal["context-snapshot", "context-delta"]
     version: str
     producedAt: str
     hash: str
     data: EnvironmentContext | dict
 
+
 # ---------- Request Body ----------
+
 class ContextInput(BaseModel):
-    """Request body for context endpoints that accept a location hint."""
+    """POST /context input model."""
     locationHint: Optional[LocationHint] = None
