@@ -4,9 +4,14 @@ Dieses Repository ist für alle Gruppen gedacht. Jede Gruppe kann sich einen eig
 
 ## Bestehende Ordner
 
-### [YoloE Object Detection](YoloE%20Object%20Detection/)
-Echtzeit-Objekterkennung mit YOLO11 - enthält Tools für Webcam-basierte Detektion mit Prompted und Non-Prompted Modi.
+### [Human Image Capture](HumanImageCaputure/README.md)
+Erkennt Personen über die Webcam und sendet zugeschnittene Bilder durch den OutputLayer.
+
+### [Human Description](HumanDescription/README.md)
+Konsumiert Personenbilder vom Human Image Capture Service und generiert natürlichsprachliche Beschreibungen mittels Ollama Vision-Modellen.
 
 ### [Architecture](./architecture/README.md/)
 
 ### [ContextProvider](./ContextProvider/ReadMe.md/)
+
+### [GazeDetection](./GazeDetection/README.md)

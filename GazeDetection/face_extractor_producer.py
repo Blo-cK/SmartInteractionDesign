@@ -75,14 +75,14 @@ async def run_producer(num_frames=-1):
         bbox_info = file_metadata.get('bbox', {})
         frame_size = file_metadata.get('frame_size', {})
         
-        # Schedule async send with data in JSON format
+        # async send with data in JSON format
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(send_face_with_data(producer, face_img, bbox_info, face_id, frame_size))
         loop.close()
         
         sent[0] += 1
-        print(f"📤 Sent face {sent[0]}: {face_id}")
+        print(f"Sent face {sent[0]}: {face_id}")
         
         # Delete files after sending
         try:
@@ -91,7 +91,7 @@ async def run_producer(num_frames=-1):
             if os.path.exists(meta_path):
                 os.remove(meta_path)
         except Exception as e:
-            print(f"⚠️ Could not delete files: {e}")
+            print(f"Could not delete files: {e}")
     
     extractor = WebcamFaceExtractor(
         frames_folder=frames_folder,
@@ -104,17 +104,16 @@ async def run_producer(num_frames=-1):
     extractor.reset_directories()
     
     if num_frames == -1:
-        print("🎥 Capturing continuously (infinite mode)...")
+        print("Capturing continuously (infinite mode)...")
     else:
-        print(f"🎥 Capturing {num_frames} frames (send immediately after extraction)...")
+        print(f"Capturing {num_frames} frames...")
     extractor.start_capture(camera_index=0)
     
     while extractor.is_running:
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
     
     await asyncio.sleep(0.5)  # Allow final sends
     await producer.disconnect()
-    print(f"✅ {sent[0]} faces → NATS (real-time)")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 import sounddevice as sd
 import os
-from german_whisper_transcriber import GermanWhisperTranscriber
+from TextTranscriber.german_whisper_transcriber import GermanWhisperTranscriber
 from german_emotion_classifier import GermanEmotionClassifier
 
 SAMPLE_RATE = 16000
@@ -13,35 +13,40 @@ CHUNK_DURATION = 10.0  # seconds
 CHUNK_SIZE = int(SAMPLE_RATE * CHUNK_DURATION)
 
 
-# Finetuning variables
+# Model configuration
 WHISPER_MODEL_SIZE = "medium"  # Options: tiny, base, small, medium, large
-EMOTION_MODEL_NAME = "cardiffnlp/twitter-roberta-base-emotion-multilabel-latest"
-#https://huggingface.co/cardiffnlp/twitter-roberta-base-emotion-multilabel-latest
+EMOTION_MODEL_NAME = "facebook/bart-large-mnli"  # Zero-shot emotion classification
+# Supports 28 emotions: admiration, amusement, anger, annoyance, approval, caring,
+# confusion, curiosity, desire, disappointment, disapproval, disgust, embarrassment,
+# excitement, fear, gratitude, grief, joy, love, nervousness, optimism, pride, 
+# realization, relief, remorse, sadness, surprise, neutral
 
 LANGUAGE = "de"
 USE_GPU = torch.cuda.is_available()
 device = torch.device("cuda" if USE_GPU else "cpu")
 
 transcriber = GermanWhisperTranscriber(model_size=WHISPER_MODEL_SIZE, device="cuda" if USE_GPU else "cpu")
-emotion_classifier = GermanEmotionClassifier(model_name=EMOTION_MODEL_NAME, device="cuda" if USE_GPU else "cpu")
+emotion_classifier = GermanEmotionClassifier(model_name=EMOTION_MODEL_NAME)
 
 
 def transcribe_audio(audio):
     """
-    Transcribe audio chunk and detect emotion.
+    Transcribe audio chunk and detect emotion via transformer model.
+    Prints the transcription, emotion, and all emotion scores.
     """
-    print("Transcribing...")
+    print("[Transcription] Processing audio...")
     try:
         text = transcriber.transcribe(audio, sample_rate=SAMPLE_RATE, language=LANGUAGE)
-        if text.strip():
-            print("Transcribed: ",text)
+        if text and text.strip():
+            print(f"[Transcription]: '{text}'")
             emotion_result = emotion_classifier.predict(text)
-            print(f"Detected emotion: {emotion_result['emotion']} (confidence: {emotion_result['confidence']:.2f})")
-            print(f"All scores: {emotion_result['all']}")
+            print(f"[Emotion] Detected: {emotion_result['emotion']} (confidence: {emotion_result['confidence']:.2f})")
+            # Optionally show all emotion scores
+            print(f"[Emotion] All scores: {emotion_result['all']}")
         else:
-            print("No speech detected.")
+            print("[Transcription] No speech detected.")
     except Exception as e:
-        print(f"Error in transcription/emotion: {e}")
+        print(f"[Transcription] Error: {e}")
 
 def save_wav(filename: str, audio: np.ndarray):
     """audio chunk into WAV file."""
@@ -51,7 +56,7 @@ def save_wav(filename: str, audio: np.ndarray):
         wf.setframerate(SAMPLE_RATE)
         wf.writeframes((audio * 32767).astype(np.int16).tobytes())
 
-def audio_callback(indata, status):
+def audio_callback(indata, frames, time, status):
     if status:
         print("Audio status:", status)
     os.makedirs("./temp", exist_ok=True)
@@ -66,10 +71,16 @@ def audio_callback(indata, status):
     transcribe_audio(audio)
 
 
-if __name__ == "__main__":
-    print(f"Starting microphone stream on device: {device} (GPU: {USE_GPU})")
-    print(f"Whisper model: {WHISPER_MODEL_SIZE}, Emotion model: {EMOTION_MODEL_NAME}")
-    print(f"Language: {LANGUAGE}, Chunk duration: {CHUNK_DURATION}s")
+if __name__ == '__main__':
+    print("="*60)
+    print("🎙️  Local Audio → Transcription → Emotion Detection")
+    print("="*60)
+    print(f"Device: {device} (GPU: {'Enabled' if USE_GPU else 'Disabled'})")
+    print(f"Whisper model: {WHISPER_MODEL_SIZE}")
+    print(f"Emotion model: {EMOTION_MODEL_NAME}")
+    print(f"Language: {LANGUAGE}")
+    print(f"Chunk duration: {CHUNK_DURATION}s")
+    print("="*60)
     print("Listening... Press Ctrl+C to stop.")
     try:
         with sd.InputStream(

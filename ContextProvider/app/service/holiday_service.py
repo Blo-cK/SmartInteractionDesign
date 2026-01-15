@@ -1,9 +1,7 @@
 from __future__ import annotations
 from typing import List
-
 import httpx
-
-from ContextProvider.app.model.context_models import Holiday
+from ..model.context_models import Holiday
 
 NAGER_BASE_URL = "https://date.nager.at"
 
@@ -30,11 +28,16 @@ async def fetch_holidays(country_code: str, year: int) -> List[Holiday]:
             local_name = item.get("localName")
             if not date or not local_name:
                 continue
+
+            # Nager.Date: "counties" enthält optionale Liste von Regionen (z.B. ["DE-BW", "DE-HE"])
+            regions = item.get("counties")
+
             holidays.append(
                 Holiday(
                     date=date,
                     localName=local_name,
                     countryCode=country_code,
+                    regions=regions,
                 )
             )
 

@@ -1,7 +1,7 @@
 import time
 import cv2
 from face_extractor import WebcamFaceExtractor
-from SmartInteractionDesign.HeadGestureRecognition.headgesturerecognition import HeadGestureRecognition
+from headgesturerecognition import HeadGestureRecognition
 import json
 from pathlib import Path
 import shutil

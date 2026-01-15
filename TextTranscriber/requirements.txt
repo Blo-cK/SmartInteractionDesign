@@ -9,7 +9,7 @@ nats-py
 aiokafka
 transformers
 numpy
+openai-whisper
 soundfile
 sounddevice
-sentencepiece
 opencv-python

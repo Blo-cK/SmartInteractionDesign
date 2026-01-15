@@ -1,13 +1,13 @@
 import argparse
 import cv2
-from SmartInteractionDesign.HeadGestureRecognition.headgesturerecognition import HeadGestureDetector  # importiere die Klasse aus deinem Modul
+from headgesturerecognition import HeadGestureRecognition
 
 
 class HeadGestureDemo:
     """Main class to test HeadGestureDetector."""
 
     def __init__(self, args):
-        self.detector = HeadGestureDetector(
+        self.detector = HeadGestureRecognition(
             face_detector=args.face_detector,
             draw_bbox=args.draw_bbox,
             draw_landmarks=args.draw_landmarks,
