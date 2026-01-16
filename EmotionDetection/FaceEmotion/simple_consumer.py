@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 def decode_face_image(msg_data):
-    """Extract and decode face image from NATS message (JSON format)"""
     try:
         json_data = json.loads(msg_data.decode('utf-8'))
         face_b64 = json_data.get('face_image', None)
@@ -40,7 +39,6 @@ def decode_face_image(msg_data):
         face_array = np.frombuffer(face_bytes, dtype=np.uint8)
         face_img = cv2.imdecode(face_array, cv2.IMREAD_COLOR)
         
-        # Extract metadata
         metadata = {
             'face_id': json_data.get('face_id', 'unknown'),
             'bbox': json_data.get('bbox', {}),
