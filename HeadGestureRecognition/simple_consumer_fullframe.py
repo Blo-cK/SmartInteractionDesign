@@ -72,6 +72,7 @@ async def run_consumer():
     
     print("Processing full frames...")
     count = [0]
+    headgesture_none = False
     
     async def handle_message(msg):
         # msg is InputResultWrapper, actual NATS message is in msg.msg
@@ -145,6 +146,12 @@ async def run_consumer():
             if head_gesture != 'none':
                 await kafka.sendData(msg, result, "headgesture_recognition")
                 print(f"✅ Face {track_id} | Gesture={head_gesture} | Confidence={confidence if confidence is not None else 'n/a'}")
+                headgesture_none = False
+            
+            if head_gesture == 'none' and headgesture_none != True:
+                await kafka.sendData(msg, result, "headgesture_recognition")
+                print(f"✅ Face {track_id} | Gesture={head_gesture} | Confidence={confidence if confidence is not None else 'n/a'}")
+                headgesture_none = True
 
             count[0] += 1
     
