@@ -25,7 +25,7 @@ async def run_producer():
     print("Press Ctrl+C to stop")
     
     frame_count = 0
-    fps = 2  
+    fps = 3
     
     try:
         while True:
@@ -34,11 +34,7 @@ async def run_producer():
             
             frame_count += 1
             if frame_count % 5 == 0:
-                print(f"Sent {frame_count} frames")
-            
-            # Additional delay: 500ms between frames = 2 FPS max
-            await asyncio.sleep(0.5)
-            
+                print(f"Sent {frame_count} frames")            
     except KeyboardInterrupt:
         print(f"\nStopped after {frame_count} frames")
     finally:

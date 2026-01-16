@@ -67,8 +67,7 @@ async def main():
             logger.info(f"Received text: '{text}'")
             emotion_result = emotion_classifier.predict(text)
             logger.info(f"[Emotion] Detected: {emotion_result['emotion']} (confidence: {emotion_result['confidence']:.2f})")
-            # if DEBUG_MODE:
-                # logger.debug(f"[Emotion] All scores: {emotion_result['all']}")
+
             await kafka_producer.sendData(input_result, emotion_result, 'text_emotion')
             logger.info(f"Emotion result sent to Kafka")
             
