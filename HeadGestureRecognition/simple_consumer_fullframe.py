@@ -75,6 +75,7 @@ async def run_consumer():
     headgesture_none = False
     
     async def handle_message(msg):
+        nonlocal headgesture_none
         # msg is InputResultWrapper, actual NATS message is in msg.msg
         frame_bytes = msg.msg.data
         headers = msg.msg.headers or {}
