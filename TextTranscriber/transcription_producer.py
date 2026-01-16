@@ -17,7 +17,7 @@ from german_whisper_transcriber import GermanWhisperTranscriber
 # Configuration
 SAMPLE_RATE = 16000
 WHISPER_MODEL_SIZE = "medium"  # Options: tiny, base, small, medium, large
-LANGUAGE = "de"
+LANGUAGE = "en"
 USE_GPU = torch.cuda.is_available()
 NATS_BROKER = "152.53.32.66:4222"
 SERVICE = "text_transcriber"

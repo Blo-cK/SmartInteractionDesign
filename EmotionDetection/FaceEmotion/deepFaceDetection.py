@@ -73,13 +73,22 @@ def analyze_frame(frame, personID: str):
         majority = prev
 
     out = {
-        "personID": personID,
-        "timestamp": ts,
+        # "personID": personID,
+        # "timestamp": ts,
         "age": age,
         "gender": gender,
+        # "emotion_probs": emotion_probs,
         "dominant_emotion": dominant,
         "stable_emotion": majority,
         "emotion_changed": changed,
-        "previous_emotion": prev,
+        "previous_emotion": prev
+        # also include a small summary for easy printing
+        # "summary": {
+        #     "personID": personID,
+        #     "stable_emotion": majority,
+        #     "emotion_changed": changed,
+        #     "age": age,
+        #     "gender": gender,
+        # }
     }
     return out
