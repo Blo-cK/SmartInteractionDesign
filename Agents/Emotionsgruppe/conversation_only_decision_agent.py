@@ -209,26 +209,7 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
         #If new sensor data is available, the prompt will add the sensor information
         person_information = "you do not have any information about the person you are talking to."
         
-        if sensor_data_is_available:
-            # if head gesture is turn: then check gaze direction, if gaze is looking at agent, then ignore head gesture
-            # if head_gesture_available and gaze_available:
-            #     # Extract head gesture from nested result structure
-            #     head_gesture_result = self.sensordata.newest_head_gesture_data.get("result", {})
-            #     head_gesture = head_gesture_result.get("head_gesture", "").upper()
-                
-            #     # Extract gaze data from nested result structure
-            #     gaze_result = self.sensordata.newest_gaze_data.get("result", {})
-            #     gaze = gaze_result.get("gaze", {})
-            #     pitch = gaze.get("pitch", 0)
-            #     yaw = gaze.get("yaw", 0)
-                
-            #     # Determine if looking straight (yaw close to 0, pitch close to 0)
-            #     is_looking_straight = abs(yaw) < 20 and abs(pitch) < 20
-                
-            #     if head_gesture == "TURN" and is_looking_straight:
-            #         print(f"Ignoring head gesture TURN since gaze is straight (yaw: {yaw}, pitch: {pitch})")
-            #         self.sensordata.newest_head_gesture_data = None
-            
+        if sensor_data_is_available:            
             person_information = str(self.sensordata.newest_gaze_data) + " " + str(self.sensordata.newest_head_gesture_data) + " " + str(self.sensordata.newest_face_emotion_data) + " " + str(self.sensordata.newest_text_emotion_data)
             print("\n\nPerson information from sensors:", person_information + "\n\n")
             
