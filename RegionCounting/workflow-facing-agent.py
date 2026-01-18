@@ -47,7 +47,8 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
     consumer = InputLayerConsumer(topic=topic)
 
     previous_count = {"people_in_region": 0}
-    model = YOLO("yolo11n.pt")
+    model = YOLO('yolo11n-pose.pt') # pose model for keypoint tracking
+
     # region coordinates
     region_x1, region_x2 = 650, 1100
     region_y1, region_y2 = 250, 850
@@ -57,17 +58,55 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
         people_in_region = 0
 
         boxes = results[0].boxes
+        keypoints = results[0].keypoints
+
         # iterate over all tracked boxes in frame
-        for box in boxes:
+        for i, box in enumerate(boxes):
+            # visualize the box
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
             # grab center of tracked box
             x_center = float((box.xyxy[0][0] + box.xyxy[0][2]) / 2)
             y_center = float((box.xyxy[0][1] + box.xyxy[0][3]) / 2)
 
             # check if center of tracked box is inside the region
             if region_x1 <= x_center <= region_x2 and region_y1 <= y_center <= region_y2:
-                people_in_region += 1
+                # check if keypoints were found
+                if keypoints is not None:
+                    # get keypoints need for determining whether the person is facing the agent
+                    keypoints_of_person = keypoints.xy[i]
+                    conf_of_keypoints = keypoints.conf[i]
+                    left_shoulder = keypoints_of_person[5]
+                    right_shoulder = keypoints_of_person[6]
+                    nose = keypoints_of_person[0]
 
-        # show region in frame
+                    # check if conf for keypoints is available
+                    if conf_of_keypoints is not None:
+                        left_conf = conf_of_keypoints[5]
+                        right_conf = conf_of_keypoints[6]
+
+                        # check if conf for predicted keypoints is surpassing a threshold
+                        if left_conf > 0.3 and right_conf > 0.3:
+                            # calculate the center of the shoulders
+                            shoulder_width = abs(float(right_shoulder[0] - left_shoulder[0]))
+                            shoulder_center_x = (left_shoulder[0] + right_shoulder[0]) / 2
+                            # calculate the offset between nose and center of the shoulders
+                            nose_x = float(nose[0])
+                            nose_offset = abs(nose_x - shoulder_center_x)
+                            # visualize the keypoints
+                            cv2.circle(frame, (int(nose_x), int(nose[1])), 3, (0, 255, 0), -1)
+                            cv2.line(frame, (int(left_shoulder[0]), int(left_shoulder[1])),
+                                             (int(right_shoulder[0]), int(right_shoulder[1])), (0, 255, 0), 2)
+
+                            # if shoulder width is not zero and the relative offset is surpassing a threshold,
+                            # count person to the people in region
+                            if shoulder_width > 0:
+                                relative_offset = nose_offset / shoulder_width
+                                if relative_offset < 0.3:
+                                    people_in_region += 1
+
+        # visualize region in frame
         color = (145, 0, 175)
         thickness = 2
         cv2.rectangle(frame, (region_x1, region_y1), (region_x2, region_y2), color, thickness)
