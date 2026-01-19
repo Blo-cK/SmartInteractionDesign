@@ -49,7 +49,7 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
     previous_count = {"people_in_region": 0}
     model = YOLO("yolo11n.pt")
     # region coordinates
-    region_x1, region_x2 = 650, 1100
+    region_x1, region_x2 = 350, 1400
     region_y1, region_y2 = 250, 850
 
     async def count_people_in_region(frame):

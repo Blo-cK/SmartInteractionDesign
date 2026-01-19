@@ -46,20 +46,26 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
     """
     consumer = InputLayerConsumer(topic=topic)
 
-    previous_count = {"total_people": 0}
+    previous_result = {"total_people": 0, "trend": "increasing"}
+    heatmap = solutions.Heatmap(
+        show=False,  # display the output
+        model="yolo11n.pt",  # model for heatmap
+        colormap=cv2.COLORMAP_PARULA,  # colormap of heatmap
+        classes=[0],  # only detect people
+        verbose=False # mute auto console prints
+    )
 
     async def get_heatmap_data(frame):
-        heatmap = solutions.Heatmap(
-            show=False,  # display the output
-            model="yolo11n.pt",  # model for heatmap
-            colormap=cv2.COLORMAP_PARULA,  # colormap of heatmap
-            classes=[0],  # only detect people
-            verbose=False # mute auto console prints
-        )
         results = heatmap(frame)
         total_people = results.total_tracks
+        trend = previous_result["trend"]
 
-        return {"total_people": total_people}, frame
+        if total_people < previous_result["total_people"]:
+            trend = "decreasing"
+        elif total_people > previous_result["total_people"]:
+            trend = "increasing"
+
+        return {"total_people": total_people, "trend": trend}, results.plot_im
 
     async def handle_message(result: InputResultWrapper):
         """
@@ -81,8 +87,9 @@ async def consumer_task(topic: str, output_producer: OutputLayerProducer, servic
             cv2.waitKey(1)
 
         # only send data if current value differs from previously sent value
-        if previous_count["total_people"] != processed_result["total_people"]:
-            previous_count["total_people"] = processed_result["total_people"]
+        if previous_result["total_people"] != processed_result["total_people"] or previous_result["trend"] != processed_result["trend"]:
+            previous_result["total_people"] = processed_result["total_people"]
+            previous_result["trend"] = processed_result["trend"]
 
             # send Output Layer
             await output_producer.sendData(
