@@ -1,6 +1,4 @@
-#Mit env (3.13.5) und ollama + qwen3-vl:4b installiert
-#Ollama starten
-
+#Beschreibt Bildinhalte auf Leertaste
 import sys
 from pathlib import Path
 import asyncio

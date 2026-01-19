@@ -1,4 +1,4 @@
-# ...existing code...
+#Copilot-slop, funktioniert, sucht aber nur mit der Bildbeschreibung, nicht mit OCR-Inhalten
 import cv2
 import base64
 from ollama import chat
@@ -9,7 +9,6 @@ import time
 import re
 
 CAM_INDEX = 0  # ggf. anpassen
-# ÄNDERE: Modellaufforderung — keine OCR, nur Bildbeschreibung
 INSTRUCTION = (
     "Bitte beschreibe ausschließlich den Bildinhalt in 1–2 Sätzen. "
     "Keine OCR, keinen sichtbaren Text extrahieren oder wiedergeben. "
@@ -23,7 +22,7 @@ if not cap.isOpened():
 
 print("Webcam läuft. Drücke SPACE zum Erfassen, ESC zum Beenden.")
 
-# Einfacher DuckDuckGo HTML-Parser (kein externes BS4 nötig)
+# Einfacher DuckDuckGo HTML-Parser
 class DDGParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -180,4 +179,3 @@ try:
 finally:
     cap.release()
     cv2.destroyAllWindows()
-# ...existing code...

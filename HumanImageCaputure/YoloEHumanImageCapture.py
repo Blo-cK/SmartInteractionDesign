@@ -23,8 +23,8 @@ from architecture.library.output_layer import OutputLayerProducer, OutputLayerMe
 CONFIG = {
     "model_path": "yoloe-11s-seg.pt",
     "person_classes": ["person"],
-    "confidence": 0.15,
-    "frames_to_confirm": 20,
+    "confidence": 0.20,
+    "frames_to_confirm": 100,
     "frames_to_lose": 100,
     "position_tolerance": 150,
     "camera_index": 0,
