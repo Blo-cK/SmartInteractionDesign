@@ -207,9 +207,9 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
 
         
         #If new sensor data is available, the prompt will add the sensor information
-        person_information = "you do not have any information about the person you are talking to."
+        person_information = "You currently do not have any new information about the person you are talking to."
         
-        if sensor_data_is_available:            
+        if sensor_data_is_available:          
             person_information = str(self.sensordata.newest_gaze_data) + " " + str(self.sensordata.newest_head_gesture_data) + " " + str(self.sensordata.newest_face_emotion_data) + " " + str(self.sensordata.newest_text_emotion_data)
             print("\n\nPerson information from sensors:", person_information + "\n\n")
             
@@ -222,7 +222,7 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
                 "text_emotion_data": self.sensordata.newest_text_emotion_data
             })
               
-            environment_information = "You are in a room and looking at an embodied agent."
+            environment_information = "A person is standing in front of you. As an embodied agent you are able to perceive their gaze, head gestures, facial emotions, and text emotions of their transcribed speech."
 
             # Aggregate sensor data with LLM. Later this service can be hosted externally
             person_and_environment_description = self.aggregate_sensor_information_with_llm(agent_state, person_information, environment_information)
@@ -243,28 +243,32 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
     def aggregate_sensor_information_with_llm(self, agent_state, person_information, environment_information):
         
         sensor_data_aggregation_prompt = """
-The following conversation between you and me => do not use the history for any gesture or emotion detection:
-{chat_history}
-Here are the informations from the sensors and sources:
-{sensor_data}
-Write a short text describing the person (gaze and head position) and their surroundings.
-You are detecting a person with the following head rotation and head position. Yaw (-90° to +90°) 
-is the horizontal head rotation (left/right), pitch (-90° to +90°) is the vertical tilt (up/down), 
-roll (-180° to +180°) is the lateral head tilt (shoulder), and head_position (x: 0.0-1.0, y: 0.0-1.0) 
-are the normalised 2D coordinates of the tip of the nose in the frame. 
-For head_position, x=0.0 is left and x=1.0 is right; y=0.0 is top and y=1.0 is bottom (standard image coordinates). 
-You are also detecting some Head Gestures like NOD, SHAKE, TURN, UP DOWN, TURN, WAGGLE. 
-Use this information to create a brief description of the person and the situation.
-You are also given information about the detected emotions of the person from facial expression analysis.
+    Here is the conversation history:
+    {chat_history}
+    Here are the latest informations from the sensors and sources:
+    {sensor_data}
 
-If the person is for example looking heavily away from you, 
-you have to mention that the person is not fully focused on the conversation.
-Change your speech and how you interact based on the current emotions the person interacting with you exhibits.
-"""
+    Using the sensor data:
+    - FaceEmotion includes predicted age, gender, stable emotion, and any noted change from a previous emotion.
+    - TextEmotion is one of: admiration, amusement, anger, annoyance, approval, caring, confusion, curiosity, desire, disappointment, disapproval, disgust, embarrassment, excitement, fear, gratitude, grief, joy, love, nervousness, optimism, pride, realization, relief, remorse, sadness, surprise, neutral.
+    - HeadGesture can be: nod, shake, tilt, up/down, waggle and turn. it could be None if no gesture is detected.
+    - GazeData indicates if the person is looking at the agent or away. It includes head position and head rotation data.
+    - If signals conflict, favor the most recent combination of face and text emotions and state uncertainty briefly while gender should not change.
+
+    Write a single downstream "Context instruction for chat agent" (2-3 sentences) that:
+    1) Write a description about the persons current headgesture combined with gaze information. Use the position information to clearly state where the persons is looking at. (e.g. if the persons gaze is slightly away from center, tell the agent that the person is not currently interacting with you or if the gaze is near the center that the agent has the users fullest attention)
+    2) Describes the person's apparent demographics, gender and current emotional state, noting any change/stability.
+    3) Infers their likely attitude toward the assistant (supportive/neutral/negative/confused/etc.).
+    4) Tells the chat agent how to respond next (tone, pacing, empathy, directness) and how to adapt for age: more patient, clear, and respectful for older users; more casual and energetic for younger users. Suggest a short next move (e.g., ask why if disapproval/anger, reassure and support if sadness/fear, celebrate if joy/approval).
+
+    IMPORTANT: If you detect that the persons attention is not focused onto the agent (yaw > 40 or yaw < -40), drop all previous instructions and tell the agent to ask if the user is still interested to continue the conversation. Add sensory information in the answer.
+
+    Keep it concise and actionable
+    """
             
         prompt = ChatPromptTemplate.from_messages([
-                ("system", "You are an assistant standing in the center of the screen (x: 0.5, y: 0.5), who receives information about the person you are talking to and the current situation via various sensors and sources. Your task is to create a brief description of the person and the situation so that this information can be used in the conversation to make it more context-sensitive."),
-                ("human", sensor_data_aggregation_prompt)
+            ("system", "You create concise downstream instructions for a chat agent to adapt its behavior to the user's emotional and demographic signals. Use face and text emotion cues to infer attitude and prescribe tone, pacing, empathy, and a next conversational move. Be neutral, clear, and brief."),
+            ("human", sensor_data_aggregation_prompt)
             ])
 
         self.chain = prompt | self.llm            
