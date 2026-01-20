@@ -15,3 +15,8 @@ Konsumiert Personenbilder vom Human Image Capture Service und generiert natürli
 ### [ContextProvider](./ContextProvider/ReadMe.md/)
 
 ### [GazeDetection](./GazeDetection/README.md)
+
+### [RegionCounting](./RegionCounting/README.md)
+
+### [Heatmap](./Heatmap/README.md)
+
