@@ -26,7 +26,7 @@ def extract_static_context(env: EnvironmentContext) -> dict:
     Extract the slowly changing parts of the environment context.
 
     This includes location, holidays, holiday summary, basic day meta
-    and coarse place information.
+    and coarse place information. And also local events.
     """
     return {
         "location": env.location.model_dump(),
@@ -39,6 +39,7 @@ def extract_static_context(env: EnvironmentContext) -> dict:
         if env.placeContext is not None
         else None,
         "locale": env.locale.model_dump(),
+        "events": env.events.model_dump() if hasattr(env, "events") and env.events else None,
     }
 
 

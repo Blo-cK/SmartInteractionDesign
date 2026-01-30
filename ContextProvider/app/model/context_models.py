@@ -165,6 +165,7 @@ class LocalEvent(BaseModel):
     endTime: Optional[str] = None        # ISO datetime
     locationName: Optional[str] = None
     url: Optional[str] = None
+    description: Optional[str] = None
 
 
 class EventsContext(BaseModel):

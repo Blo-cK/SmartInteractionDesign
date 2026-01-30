@@ -14,6 +14,8 @@ SERVICE_ID_STATIC = "context_static"
 SERVICE_ID_DYNAMIC = "context_dynamic"
 SERVICE_ID_REGION_COUNTING = "region_counting"
 SERVICE_ID_HEATMAP = "heatmap"
+SERVICE_ID_LOUDNESS = "environment_loudness"
+SERVICE_ID_BRIGHTNESS = "video_brightness"
 
 
 class ConversationOnlyDecisionAgent(BaseDecisionAgent):
@@ -133,14 +135,22 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
         Heatmap contains:
           - total_people
           - trend
+        
+        Environment loudness contains:
+        - environment loudness
+
+        Video brightness contains:
+        - video brightness
 
         """
         static_payload = self._fetch_latest_from_service(SERVICE_ID_STATIC)
         dynamic_payload = self._fetch_latest_from_service(SERVICE_ID_DYNAMIC)
         region_counting = self._fetch_latest_from_service(SERVICE_ID_REGION_COUNTING)
         heatmap = self._fetch_latest_from_service(SERVICE_ID_HEATMAP)
+        loudness_payload = self._fetch_latest_from_service(SERVICE_ID_LOUDNESS)
+        brightness_payload = self._fetch_latest_from_service(SERVICE_ID_BRIGHTNESS)
 
-        if not static_payload and not dynamic_payload and not region_counting and not heatmap:
+        if not static_payload and not dynamic_payload and not region_counting and not heatmap and not loudness_payload and notbrightness_payload:
             return None
 
         merged: Dict[str, Any] = {}
@@ -152,6 +162,10 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
             merged.update(region_counting)
         if heatmap:
             merged.update(heatmap)
+        if loudness_payload:
+            merged.update({"loudness_info": loudness_payload})
+        if brightness_payload:
+            merged.update({"brightness_info": brightness_payload})
 
         return merged
 
@@ -179,6 +193,12 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
         people_in_region = env.get("people_in_region") or 0
         total_people = env.get("total_people") or 0
         trend = env.get("trend") or ""
+        loudness_info = env.get("loudness_info") or {}
+        scaled_value = loudness_info.get("loudness_scaled")
+        brightness_info = env.get("brightness_info") or {}
+        b_scale = brightness_info.get("brightness_scaled")
+        events_data = env.get("events") or {}
+        local_today = events_data.get("localToday") or []
 
         parts: List[str] = []
 
@@ -488,6 +508,28 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
                     + "."
                 )
 
+        # --- Environment loudness ---
+        if scaled_value is not None:
+            if scaled_value <= 3:
+                status = "very quiet and peaceful. Actively say that you find it pleasantly quiet here"
+            elif scaled_value <= 7:
+                status = "moderately noisy with some background activity"
+            else:
+                status = "very loud and busy. Actively say that you find it quite loud here"
+    
+            parts.append(f"The current ambient noise in the room is a {scaled_value} out of 10 and therefore {status}.")
+
+        # --- Video brightness ---
+        if b_scale is not None:
+            if b_scale <= 3:
+                light_desc = "dimly lit or dark. Actively say that you can hardly see anything because it is so dark."
+            elif b_scale <= 7:
+                light_desc = "well-lit with comfortable brightness"
+            else:
+                light_desc = "very bright, possibly intense light"
+            
+            parts.append(f"The room's brightness level is {b_scale} out of 10, so it is currently {light_desc}.")
+
         # --- Region counting ---
         if people_in_region:
             match people_in_region:
@@ -521,11 +563,42 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
                 "sensor data."
             )
 
+        # --- Local Events ---
+        if isinstance(local_today, list) and len(local_today) > 0:
+            event_lines = ["The following local events are happening in the city today, please remmember all of them:"]
+
+            """
+            Use the last 10 events of the day (useful for afternoon events). 
+            Consider adjusting how many events are read out, as this can quickly generate a lot of text.
+            """
+
+            for event in local_today[-10:]:
+                title = event.get("title", "Event")
+                start = event.get("startTime", "")
+                desc = event.get("description", "")
+                
+                time_info = ""
+                if start and "T" in start:
+                    time_info = f" at {start.split('T')[1][:5]}"
+                
+                # The entire description of an event (or only the first e.g. 100 characters with desc[:100])
+                event_lines.append(f"- {title}{time_info}: {desc}")
+            parts.append("\n".join(event_lines))
+        else:
+            parts.append("There are no specific local events listed in the calendar for today.")
+
         return " ".join(parts)
 
     # -------------------------------------------------------------------------
     # LLM aggregation
     # -------------------------------------------------------------------------
+
+    """
+    Consider shortening the events prompt. So far, the texts have been very long because all the information 
+    about the events is to be included for the sake of completeness. If no detailed information is to be provided, 
+    it may be sufficient to include only the title, location, and date of the events, for example.
+    """
+
     def aggregate_sensor_information_with_llm(
                 self,
                 agent_state: AgentState,
@@ -552,11 +625,14 @@ class ConversationOnlyDecisionAgent(BaseDecisionAgent):
     - whether it is a weekday or weekend and roughly which part of the day,
     - which public holiday was most recent and which one is next, including their dates,
     - the current weather (temperature, wind, precipitation),
-    - how the weather will develop in the next few hours and tomorrow.
+    - how the weather will develop in the next few hours and tomorrow. 
     - how many people should be addressed while talking.
     - how many people are taking part in the conversation.
     - how many people are in the frame.
     - whether the amount of people in the current location is increasing or decreasing.
+    - the current ambient loudness level and if it's currently quiet or noisy.  
+    - the current room brightness and if it is dark or bright.                  
+    - IMPORTANT: List ALL local events mentioned in the sensor data with their titles and times. Do not shorten this list, as the user might ask for all of them.
 
     Keep the wording compact but do not omit concrete numerical details such as
     dates, temperatures, times or day distances if they appear in the data.
