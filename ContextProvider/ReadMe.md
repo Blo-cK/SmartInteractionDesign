@@ -32,6 +32,8 @@ The service provides:
   - Efficient change detection using a stable content hash
 - **Automatic background push**
   - Periodic push of context updates to an upstream message service
+- **Events**
+  - Provides events for the current day, currently implemented for Karlsruhe and retrieved from its RSS feed
 
 ---
 
